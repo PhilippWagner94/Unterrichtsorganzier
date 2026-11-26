@@ -37,7 +37,7 @@ Stand: 26.11.2026 – Planungsphase, noch kein Code.
 ## 3. Funktionen
 
 ### Klassen und Schüler
-- Klassen anlegen (Name, Einschulungsjahr), Schüler einzeln hinzufügen und bearbeiten (Vorname, Name, Geburtsdatum, Hinweisfeld).
+- Klassen anlegen (Name, Einschulungsjahr), Schüler einzeln hinzufügen und bearbeiten (Vorname, Name, Geburtsdatum, Geschlecht, Hinweisfeld).
 - **Klassenstufe wird berechnet** (Schuljahr − Einschulungsjahr + 1), nicht gespeichert. Beim Schuljahreswechsel rücken alle automatisch hoch.
 - Klasse 4 wird nach dem Schuljahr archiviert, Noten und Daten bleiben erhalten.
 - Einzelne Kinder können manuell die Klasse wechseln oder wiederholen.
@@ -53,7 +53,10 @@ Stand: 26.11.2026 – Planungsphase, noch kein Code.
 - **Pufferstunden** als eigener Blocktyp. Anzeige „X von Y Puffern übrig“.
 - Fällt eine Stunde aus: Vorschlag, einen Puffer zu nutzen oder den Plan nach hinten zu schieben.
 - Optionaler Lernbereich (Wintersport): kann mit „entfällt“ markiert werden, die Stunden werden umverteilt.
-- Sachsen-Ferien und Feiertage werden im Schuljahr hinterlegt und im Kalender berücksichtigt.
+- **Einheiten abwählen:** Jede geplante Einheit lässt sich als „findet nicht statt“ markieren (Grund optional). Der Inhalt kann dabei verworfen, auf eine Puffer- oder spätere Stunde verschoben oder als „nachholen“ vorgemerkt werden. Auch einzelne Lernziele lassen sich als „nicht behandelt“ markieren.
+- **Umsortieren:** Einheiten und ganze Lernbereich-Blöcke lassen sich per Ziehen und Ablegen neu ordnen oder auf ein anderes Datum verschieben. Stundenzähler und Richtwert-Anzeige passen sich automatisch an.
+- Änderungen betreffen nur die Planung. Bereits gehaltene Einheiten bleiben unverändert in der Historie.
+- Sachsen-Ferien und Feiertage werden als **Vorlage mitgeliefert** (offizielle Termine, in Phase 3 recherchiert) und können pro Schuljahr bearbeitet werden. Zusätzlich lassen sich eigene freie Tage eintragen (z. B. Brückentage, Schulveranstaltungen).
 
 ### Kalender und Unterrichtseinheiten
 - Kalenderansicht mit allem, was wann ist, und was zuletzt gemacht wurde.
@@ -75,7 +78,7 @@ Stand: 26.11.2026 – Planungsphase, noch kein Code.
 
 ### Tests und Noten (offen gestaltet)
 - **Tests werden frei definiert**: Name, Typ (Messwert, Note, verbal, Punkte), Einheit (s, m, min, Anzahl), Richtung („kleiner ist besser“ oder „größer ist besser“).
-- Optionale **Bewertungstabelle** pro Test: Grenzwerte → Note, selbst eintragbar (ggf. je Klassenstufe).
+- Optionale **Bewertungstabelle** pro Test: Grenzwerte → Note, selbst eintragbar, getrennt nach Klassenstufe und Geschlecht, soweit gewünscht.
 - Mitgelieferte Beispiele ohne Grenzwerte, jederzeit änderbar: Sprint, Weitsprung, Schlagwurf, Ausdauerlauf.
 - Ergebnisse pro Kind und Datum, Anzeige von Bestleistung und Verlauf. Notenübersicht mit Durchschnitt. In Klasse 1 verbale Einschätzung statt Note.
 
@@ -96,7 +99,7 @@ Stand: 26.11.2026 – Planungsphase, noch kein Code.
 |---|---|
 | Schuljahr | Zeitraum, Ferien, Feiertage |
 | Klasse | Name, Einschulungsjahr, zusätzliche Doppelstunde ja/nein, aktiv/archiviert |
-| Schüler | Vorname, Name, Geburtsdatum, Hinweis, Klasse |
+| Schüler | Vorname, Name, Geburtsdatum, Geschlecht (weiblich/männlich/divers, optional), Hinweis, Klasse |
 | Fach | Name |
 | Lernbereich | Fach, Name, Richtwert min/max, Pflicht/Wahl/optional, aktiv |
 | Lernziel | Lernbereich, Doppelstufe, Text, Klassenstufe der Behandlung |
@@ -149,6 +152,6 @@ unterrichtsorganzier/
 
 ## 7. Offene Punkte
 
-- Soll bei Schülern ein Geschlechtsfeld existieren? Es wäre nur für geschlechtsabhängige Bewertungstabellen nötig.
 - Welche Tests und Bewertungstabellen genutzt werden, wird später direkt in der App eingetragen.
-- Ferientermine Sachsen: manuell pro Schuljahr eintragen oder als Vorlage mitliefern.
+
+Entschieden: Geschlechtsfeld bei Schülern ja (optional). Ferien und Feiertage Sachsen werden als Vorlage mitgeliefert und sind editierbar.
