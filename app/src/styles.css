@@ -491,3 +491,6 @@ select {
   background: linear-gradient(transparent, var(--bg) 30%);
   padding: 12px 0 8px;
 }
+
+.tabelle { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--card, #fff); }
+.tabelle th, .tabelle td { padding: 8px 10px; border-bottom: 1px solid rgba(128,128,128,.25); text-align: left; white-space: nowrap; }
