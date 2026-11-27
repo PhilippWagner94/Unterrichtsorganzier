@@ -31,7 +31,16 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,wasm,gz,json,traineddata}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,json}'],
+        globIgnores: ['tesseract/**'],
+        runtimeCaching: [
+          {
+            // OCR-Dateien (ca. 15 MB) werden erst beim ersten Foto-Import geladen und dann lokal gespeichert.
+            urlPattern: ({ url }) => url.pathname.includes('/tesseract/'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'ocr', cacheableResponse: { statuses: [0, 200] } },
+          },
+        ],
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
         navigateFallback: `${BASE}index.html`,
       },

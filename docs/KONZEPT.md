@@ -54,7 +54,7 @@ Stand: 26.11.2026 – Planungsphase, noch kein Code.
 - Fällt eine Stunde aus: Vorschlag, einen Puffer zu nutzen oder den Plan nach hinten zu schieben.
 - Optionaler Lernbereich (Wintersport): kann mit „entfällt“ markiert werden, die Stunden werden umverteilt.
 - **Einheiten abwählen:** Jede geplante Einheit lässt sich als „findet nicht statt“ markieren (Grund optional). Der Inhalt kann dabei verworfen, auf eine Puffer- oder spätere Stunde verschoben oder als „nachholen“ vorgemerkt werden. Auch einzelne Lernziele lassen sich als „nicht behandelt“ markieren.
-- **Umsortieren:** Einheiten und ganze Lernbereich-Blöcke lassen sich per Ziehen und Ablegen neu ordnen oder auf ein anderes Datum verschieben. Stundenzähler und Richtwert-Anzeige passen sich automatisch an.
+- **Umsortieren:** Einheiten und ganze Lernbereich-Blöcke lassen sich per Umsortieren mit ▲▼-Knöpfen neu ordnen oder auf ein anderes Datum verschieben. Stundenzähler und Richtwert-Anzeige passen sich automatisch an.
 - Änderungen betreffen nur die Planung. Bereits gehaltene Einheiten bleiben unverändert in der Historie.
 - Sachsen-Ferien und Feiertage werden als **Vorlage mitgeliefert** (offizielle Termine, in Phase 3 recherchiert) und können pro Schuljahr bearbeitet werden. Zusätzlich lassen sich eigene freie Tage eintragen (z. B. Brückentage, Schulveranstaltungen).
 
