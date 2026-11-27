@@ -45,6 +45,7 @@ export default function MehrPage() {
     <Page title="Mehr">
       <Section title="Planung" />
       <List>
+        <Row title="✅ Aufgaben und Verpflichtungen" sub="To-dos, Aufsichten, Beratungen, Gespräche" to="/aufgaben" />
         <Row title="🏆 Wettkampftermine" to="/wettkaempfe" />
         <Row title="📝 Tests und Ergebnisse" to="/tests" />
         <Row title="📊 Notenübersicht" to="/noten" />
@@ -54,6 +55,7 @@ export default function MehrPage() {
       <Section title="Einrichtung" />
       <List>
         <Row title="🗓 Schuljahr und Ferien" sub="Ferien, freie Tage, aktives Schuljahr" to="/schuljahr" />
+        <Row title="📚 Fächer" sub="Welche Fächer du in diesem Schuljahr unterrichtest" to="/faecher" />
         <Row title="🎯 Lehrplan und Lernziele" sub="Lernbereiche, Richtwerte, Lernziele bearbeiten" to="/lernziele" />
       </List>
 

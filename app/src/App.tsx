@@ -1,3 +1,5 @@
+import AufgabenPage from './features/aufgaben/AufgabenPage';
+import FaecherPage from './features/mehr/FaecherPage';
 import { HashRouter, NavLink, Route, Routes } from 'react-router-dom';
 import HeutePage from './features/heute/HeutePage';
 import KalenderPage from './features/kalender/KalenderPage';
@@ -52,6 +54,8 @@ export default function App() {
           <Route path="/noten" element={<NotenPage />} />
           <Route path="/foto" element={<FotoPage />} />
           <Route path="/mehr" element={<MehrPage />} />
+          <Route path="/aufgaben" element={<AufgabenPage />} />
+          <Route path="/faecher" element={<FaecherPage />} />
           <Route path="/schuljahr" element={<SchuljahrPage />} />
           <Route path="*" element={<HeutePage />} />
         </Routes>

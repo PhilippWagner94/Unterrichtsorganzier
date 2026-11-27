@@ -5,11 +5,12 @@ import { db, neueId } from '../../db/db';
 import { stufeIm, useAktivesSchuljahr } from '../../db/hooks';
 import type { Geschlecht } from '../../db/types';
 import {
-  Button, Card, Chip, ChipAuswahl, Empty, List, Page, Row, Section, Sheet, TextArea, TextField, useToast,
+  Button, Card, Chip, ChipAuswahl, Empty, List, Page, Row, Section, Sheet, TextArea, TextField, bestaetige, useToast,
 } from '../../components/ui';
 import { KlasseFormular } from './KlasseFormular';
 import { GeburtstageKarte } from './GeburtstageKarte';
-import { formatDatum, wochentagName } from '../../lib/dates';
+import { formatDatum, heute, wochentagName } from '../../lib/dates';
+import { hatInhalt } from '../../lib/plan';
 import { schuljahrStartjahr, vollerName } from '../../lib/schuljahr';
 import { parseDatum, parseSchuelerZeilen } from '../../lib/schuelerImport';
 
@@ -57,6 +58,22 @@ export default function KlassePage() {
     setSammel(false);
   }
 
+  async function archivieren() {
+    if (!klasse) return;
+    if (klasse.archiviert) {
+      await db.klassen.update(klasse.id, { archiviert: false });
+      zeigeToast('Klasse ist wieder aktiv. Im Jahresplan „Termine abgleichen“ drücken, um fehlende Termine zu ergänzen.');
+      return;
+    }
+    const h = heute();
+    const kuenftig = (await db.einheiten.where('klasseId').equals(klasse.id).toArray()).filter((e) => e.datum > h && e.status === 'geplant' && !hatInhalt(e));
+    const frage = `Klasse ${klasse.name} archivieren? Sie verschwindet aus Heute, Kalender und Geburtstagen. Alle Daten, Noten und gehaltenen Einheiten bleiben erhalten.` +
+      (kuenftig.length ? `\n\nDie ${kuenftig.length} künftigen, noch leeren Termine werden entfernt (Termine mit Inhalt bleiben).` : '');
+    if (!bestaetige(frage)) return;
+    if (kuenftig.length) await db.einheiten.bulkDelete(kuenftig.map((e) => e.id));
+    await db.klassen.update(klasse.id, { archiviert: true });
+  }
+
   return (
     <Page title={`Klasse ${klasse.name}`} zurueck="/klassen" aktion={<button onClick={() => setBearbeiten(true)}>Bearbeiten</button>}>
       <Card>
@@ -70,8 +87,8 @@ export default function KlassePage() {
           <Link className="btn small" to={`/plan/${klasse.id}`} style={{ textDecoration: 'none' }}>
             📋 Jahresplan
           </Link>
-          <Button small kind="secondary" onClick={async () => { await db.klassen.update(klasse.id, { archiviert: !klasse.archiviert }); }}>
-            {klasse.archiviert ? 'Aus Archiv holen' : 'Archivieren'}
+          <Button small kind="secondary" onClick={archivieren}>
+            {klasse.archiviert ? 'Wieder aktiv schalten' : 'Nicht mehr zuständig (archivieren)'}
           </Button>
         </div>
       </Card>

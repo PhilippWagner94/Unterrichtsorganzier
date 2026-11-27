@@ -6,6 +6,31 @@ export type Datum = string; // 'YYYY-MM-DD'
 export interface Fach {
   id: ID;
   name: string;
+  kuerzel?: string;
+  eigene?: boolean; // vom Nutzer angelegt (ohne mitgelieferten Lehrplan)
+}
+
+export type VerpflichtungsArt = 'aufsicht_hof' | 'aufsicht_mittag' | 'fruehaufsicht' | 'beratung' | 'elterngespraech' | 'sonstiges';
+
+/** Aufgabe (zu erledigen bis …) oder Verpflichtung (Aufsicht, Beratung, Gespräch – einmalig oder wiederkehrend). */
+export interface Aufgabe {
+  id: ID;
+  typ: 'aufgabe' | 'verpflichtung';
+  titel: string;
+  details: string;
+  faellig?: Datum; // Aufgabe: bis wann; einmalige Verpflichtung: Datum
+  erledigt: boolean;
+  erledigtAm?: string;
+  einheitId?: ID; // z. B. Vorbereitung für diese Stunde
+  klasseId?: ID;
+  kategorie?: 'vorbereitung' | 'verwaltung' | 'elternkontakt' | 'sonstiges';
+  art?: VerpflichtungsArt;
+  wiederholung?: 'einmalig' | 'woechentlich' | 'zweiwoechentlich';
+  wochentag?: number; // 1 = Montag … 5 = Freitag
+  woche?: 'gerade' | 'ungerade'; // bei zweiwöchentlich: in welchen Kalenderwochen
+  zeit?: string; // z. B. "07:30–08:00"
+  ort?: string;
+  erstellt: number;
 }
 
 export type LernbereichArt = 'pflicht' | 'wahl' | 'optional';
@@ -77,6 +102,7 @@ export interface Schueler {
 
 export interface PlanBlock {
   id: ID;
+  fachId?: ID; // leer = Sport
   klasseId: ID;
   schuljahrId: ID;
   lernbereichId: ID | null; // null = Pufferblock
@@ -101,6 +127,7 @@ export interface EinheitTest {
 }
 
 export interface Einheit {
+  fachId?: ID; // leer = Sport (Vorbereitung für weitere Fächer)
   id: ID;
   klasseId: ID;
   schuljahrId: ID;

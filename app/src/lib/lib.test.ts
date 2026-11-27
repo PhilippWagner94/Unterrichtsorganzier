@@ -318,3 +318,24 @@ describe('Offene Tests', () => {
     expect(offeneTests([e], [test], [kind('a')], [], '2026-08-01')).toHaveLength(0);
   });
 });
+
+import { verpflichtungenAm, ueberfaellig } from './aufgaben';
+describe('Aufgaben und Verpflichtungen', () => {
+  const v = (extra: object) => ({ id: 'v', typ: 'verpflichtung', titel: 'Hofaufsicht', details: '', erledigt: false, erstellt: 0, ...extra }) as never;
+  it('wöchentliche Aufsicht am richtigen Wochentag, nicht in den Ferien', () => {
+    const l = [v({ wiederholung: 'woechentlich', wochentag: 2 })];
+    expect(verpflichtungenAm(l, '2026-11-24', [])).toHaveLength(1); // Dienstag
+    expect(verpflichtungenAm(l, '2026-11-25', [])).toHaveLength(0);
+    expect(verpflichtungenAm(l, '2026-11-24', [{ id: 'f', schuljahrId: 's', bezeichnung: 'Ferien', von: '2026-11-20', bis: '2026-11-30' } as never])).toHaveLength(0);
+  });
+  it('zweiwöchentlich nur in gerader/ungerader KW', () => {
+    const l = [v({ wiederholung: 'zweiwoechentlich', wochentag: 1, woche: 'gerade' })];
+    expect(verpflichtungenAm(l, '2026-10-12', [])).toHaveLength(1); // KW 42
+    expect(verpflichtungenAm(l, '2026-10-05', [])).toHaveLength(0); // KW 41
+  });
+  it('einmalige Termine und überfällige Aufgaben', () => {
+    expect(verpflichtungenAm([v({ faellig: '2026-12-01' })], '2026-12-01', [])).toHaveLength(1);
+    const a = { id: 'a', typ: 'aufgabe', titel: 'x', details: '', erledigt: false, faellig: '2026-11-01', erstellt: 0 } as never;
+    expect(ueberfaellig([a], '2026-11-27')).toHaveLength(1);
+  });
+});

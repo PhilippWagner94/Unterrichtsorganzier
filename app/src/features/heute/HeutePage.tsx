@@ -9,6 +9,7 @@ import { freiBezeichnung } from '../../lib/plan';
 import { planNeuVerteilen } from '../../lib/planAktionen';
 import { letztesBackup } from '../../db/backup';
 import type { Einheit } from '../../db/types';
+import { aufgabenAm, ueberfaellig, verpflichtungenAm } from '../../lib/aufgaben';
 import { offeneTests } from '../../lib/offeneTests';
 import { vollerName } from '../../lib/schuljahr';
 
@@ -29,6 +30,10 @@ export default function HeutePage() {
   const ergebnisse = useLiveQuery(() => db.testergebnisse.toArray(), [], []) ?? [];
   const aktiv = aktiveKlassen(klassen, sj);
   const offen = offeneTests(einheiten.filter((e) => aktiv.some((a) => a.klasse.id === e.klasseId)), tests, alleSchueler, ergebnisse, h);
+  const aufgaben = useLiveQuery(() => db.aufgaben.toArray(), [], []) ?? [];
+  const aufHeute = [...ueberfaellig(aufgaben, h), ...aufgabenAm(aufgaben, h)];
+  const aufMorgen = aufgabenAm(aufgaben, addTage(h, 1));
+  const verpfHeute = verpflichtungenAm(aufgaben, h, freieTage);
   const klasseName = (id: string) => klassen.find((k) => k.id === id)?.name ?? '';
   const lbName = (e: Einheit) => (e.istPuffer ? 'Pufferstunde' : lernbereiche.find((l) => l.id === e.lernbereichId)?.name ?? '');
   const heutige = einheiten.filter((e) => e.datum === h && aktiv.some((a) => a.klasse.id === e.klasseId));
@@ -52,6 +57,17 @@ export default function HeutePage() {
           <div className="btn-row"><Button small onClick={() => nav('/mehr')}>Jetzt sichern</Button></div>
         </Card>
       ) : null}
+
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <strong>Aufgaben und Termine</strong>
+          <Link className="btn small secondary" to="/aufgaben" style={{ textDecoration: 'none' }}>Öffnen</Link>
+        </div>
+        {verpfHeute.map((v) => <div key={v.id} className="small">🕒 {v.zeit ? v.zeit + ' · ' : ''}{v.titel}{v.ort ? ` (${v.ort})` : ''}</div>)}
+        {aufHeute.map((a) => <div key={a.id} className="small">☐ {a.titel}{a.faellig && a.faellig < h ? ' (überfällig)' : ''}</div>)}
+        {aufMorgen.length ? <div className="muted small">Morgen fällig: {aufMorgen.map((a) => a.titel).join(', ')}</div> : null}
+        {!verpfHeute.length && !aufHeute.length && !aufMorgen.length ? <div className="muted small">Heute nichts Offenes.</div> : null}
+      </Card>
 
       {offen.length ? (
         <Section title="Noten noch offen">

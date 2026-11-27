@@ -10,6 +10,7 @@ import { Anhaenge } from '../../components/Anhaenge';
 import { SpielAuswahl, ReiheAuswahl } from '../bibliothek/Auswahl';
 import { markiereAusfall, planNeuVerteilen, stelleEinheitWiederHer } from '../../lib/planAktionen';
 import type { NachAusfall } from '../../lib/plan';
+import { AufgabenInEinheit } from '../aufgaben/AufgabenInEinheit';
 import { TestsInEinheit } from '../tests/TestsInEinheit';
 import { formatLang, isoWoche } from '../../lib/dates';
 import { doppelstufeFuerKlassenstufe, klassenstufe, schuljahrStartjahr } from '../../lib/schuljahr';
@@ -228,6 +229,8 @@ export default function EinheitPage() {
       </div>
       <SpielAuswahl offen={spielWahl} onClose={() => setSpielWahl(false)} gewaehlt={e.spielIds} onChange={(ids) => set({ spielIds: ids })} />
       <ReiheAuswahl offen={reiheWahl} onClose={() => setReiheWahl(false)} gewaehlt={e.reiheIds} onChange={(ids) => set({ reiheIds: ids })} />
+
+      <AufgabenInEinheit e={e} />
 
       <TestsInEinheit e={e} set={set} />
 

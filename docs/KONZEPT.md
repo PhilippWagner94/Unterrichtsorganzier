@@ -155,3 +155,8 @@ unterrichtsorganzier/
 - Welche Tests und Bewertungstabellen genutzt werden, wird später direkt in der App eingetragen.
 
 Entschieden: Geschlechtsfeld bei Schülern ja (optional). Ferien und Feiertage Sachsen werden als Vorlage mitgeliefert und sind editierbar.
+
+## Ergänzungen (Aufgaben, Fächer)
+- Tabelle `aufgaben`: Aufgaben (mit Fälligkeit, optional an eine Einheit gebunden) und Verpflichtungen (Aufsichten, Beratung, Gespräche; einmalig, wöchentlich oder 2-wöchentlich in gerader/ungerader KW; entfallen in Ferien).
+- Fächer: Einstellung `faecher-aktiv:<schuljahrId>` (Standard Sport). `Einheit.fachId` und `PlanBlock.fachId` sind vorbereitet (leer = Sport); Lehrplan und Planung pro Fach sind noch nicht umgesetzt.
+- Klasse nicht mehr zuständig: Archivieren entfernt künftige leere Termine, Daten bleiben.
