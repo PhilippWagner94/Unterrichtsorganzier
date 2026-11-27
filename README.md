@@ -7,6 +7,8 @@ Geburtstage, Spielesammlung, Wettkämpfe, Tests und Noten, Foto-Import mit lokal
 - Sicherung: Mehr → Sicherung (JSON-Datei exportieren/importieren).
 - Einheiten umsortieren geschieht mit ▲▼-Knöpfen (kein Ziehen, weil iOS das nicht zuverlässig kann).
 
+Ausführliche Anleitung: [docs/HANDBUCH.md](docs/HANDBUCH.md)
+
 ## Veröffentlichen (GitHub Pages)
 Repository → Settings → Pages → **Source: GitHub Actions**. Danach baut `.github/workflows/deploy.yml`
 bei jedem Push auf `main` die App. Adresse: https://philippwagner94.github.io/Unterrichtsorganzier/
