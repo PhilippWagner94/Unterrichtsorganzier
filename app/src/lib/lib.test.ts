@@ -295,3 +295,26 @@ describe('Kinderliste aus Foto-Text', () => {
     expect(parseSchuelerZeilen(t).ok).toHaveLength(3);
   });
 });
+
+import { offeneTests } from './offeneTests';
+describe('Offene Tests', () => {
+  const kind = (id: string, befreit = false) => ({ id, klasseId: 'k1', vorname: id, nachname: 'X', geburtsdatum: '2018-01-01', befreit }) as never;
+  const test = { id: 't', name: 'Liegestütze' } as never;
+  const einheit = (tests: never[]) => ({ ...leereEinheit('k1', 's', '2026-08-28'), status: 'gehalten' as const, tests });
+  const erg = (schuelerId: string) => ({ id: schuelerId, testId: 't', schuelerId, datum: '2026-08-28', wert: 5 }) as never;
+  it('zeigt fehlende Kinder', () => {
+    const e = einheit([{ testId: 't', ausgenommen: [] }] as never[]);
+    const r = offeneTests([e], [test], [kind('a'), kind('b'), kind('c')], [erg('a')], '2026-09-01');
+    expect(r[0].fehlend.map((s) => s.id)).toEqual(['b', 'c']);
+  });
+  it('ignoriert Befreite, Ausgenommene und Abgeschlossene', () => {
+    const e = einheit([{ testId: 't', ausgenommen: ['b'] }] as never[]);
+    expect(offeneTests([e], [test], [kind('a'), kind('b'), kind('c', true)], [erg('a')], '2026-09-01')).toHaveLength(0);
+    const e2 = einheit([{ testId: 't', ausgenommen: [], abgeschlossen: true }] as never[]);
+    expect(offeneTests([e2], [test], [kind('a')], [], '2026-09-01')).toHaveLength(0);
+  });
+  it('zeigt keine zukünftigen Einheiten', () => {
+    const e = { ...einheit([{ testId: 't', ausgenommen: [] }] as never[]), status: 'geplant' as const };
+    expect(offeneTests([e], [test], [kind('a')], [], '2026-08-01')).toHaveLength(0);
+  });
+});

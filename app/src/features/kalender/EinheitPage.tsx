@@ -10,6 +10,7 @@ import { Anhaenge } from '../../components/Anhaenge';
 import { SpielAuswahl, ReiheAuswahl } from '../bibliothek/Auswahl';
 import { markiereAusfall, planNeuVerteilen, stelleEinheitWiederHer } from '../../lib/planAktionen';
 import type { NachAusfall } from '../../lib/plan';
+import { TestsInEinheit } from '../tests/TestsInEinheit';
 import { formatLang, isoWoche } from '../../lib/dates';
 import { doppelstufeFuerKlassenstufe, klassenstufe, schuljahrStartjahr } from '../../lib/schuljahr';
 
@@ -227,6 +228,8 @@ export default function EinheitPage() {
       </div>
       <SpielAuswahl offen={spielWahl} onClose={() => setSpielWahl(false)} gewaehlt={e.spielIds} onChange={(ids) => set({ spielIds: ids })} />
       <ReiheAuswahl offen={reiheWahl} onClose={() => setReiheWahl(false)} gewaehlt={e.reiheIds} onChange={(ids) => set({ reiheIds: ids })} />
+
+      <TestsInEinheit e={e} set={set} />
 
       <Section title="Nachbereitung" />
       <TextArea label="Reflexion (was lief gut, was ändern?)" value={e.reflexion} onChange={(v) => set({ reflexion: v })} />

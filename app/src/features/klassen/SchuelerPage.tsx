@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import { useAktivesSchuljahr, aktiveKlassen } from '../../db/hooks';
 import type { Geschlecht } from '../../db/types';
-import { Button, ChipAuswahl, Empty, Page, SelectField, TextArea, TextField, bestaetige, useToast } from '../../components/ui';
+import { Button, Check, ChipAuswahl, Empty, Page, SelectField, TextArea, TextField, bestaetige, useToast } from '../../components/ui';
 import { SchuelerLeistungen } from '../tests/SchuelerLeistungen';
 import { vollerName } from '../../lib/schuljahr';
 
@@ -26,6 +26,7 @@ export default function SchuelerPage() {
   const [geb, setGeb] = useState('');
   const [geschl, setGeschl] = useState<'' | Geschlecht>('');
   const [hinweis, setHinweis] = useState('');
+  const [befreit, setBefreit] = useState(false);
   const [klasseId, setKlasseId] = useState('');
   const [toast, zeigeToast] = useToast();
 
@@ -36,6 +37,7 @@ export default function SchuelerPage() {
     setGeb(s.geburtsdatum);
     setGeschl(s.geschlecht ?? '');
     setHinweis(s.hinweis ?? '');
+    setBefreit(s.befreit ?? false);
     setKlasseId(s.klasseId);
   }, [s?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -52,7 +54,7 @@ export default function SchuelerPage() {
     if (!vorname.trim() || !nachname.trim() || !geb) return;
     await db.schueler.update(id, {
       vorname: vorname.trim(), nachname: nachname.trim(), geburtsdatum: geb,
-      geschlecht: geschl || undefined, hinweis: hinweis.trim() || undefined, klasseId,
+      geschlecht: geschl || undefined, hinweis: hinweis.trim() || undefined, befreit: befreit || undefined, klasseId,
     });
     zeigeToast('Gespeichert');
   }
@@ -66,6 +68,7 @@ export default function SchuelerPage() {
       <ChipAuswahl optionen={GESCHLECHT} wert={geschl} onChange={setGeschl} />
       <SelectField label="Klasse (z. B. bei Klassenwechsel oder Wiederholung)" value={klasseId} onChange={setKlasseId} options={klassenOptionen} />
       <TextArea label="Hinweise (Förderbedarf, Allergien, Absprachen)" value={hinweis} onChange={setHinweis} />
+      <Check label="Dauerhaft nicht bewertbar (z. B. Langzeiterkrankung): nie in offenen Tests anzeigen" checked={befreit} onChange={setBefreit} />
       <div className="btn-row">
         <Button onClick={speichern}>Speichern</Button>
         <Button

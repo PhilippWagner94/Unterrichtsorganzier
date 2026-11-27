@@ -72,6 +72,7 @@ export interface Schueler {
   geburtsdatum: Datum;
   geschlecht?: Geschlecht;
   hinweis?: string;
+  befreit?: boolean; // dauerhaft nicht bewertbar (z. B. Langzeiterkrankung): taucht nie in offenen Tests auf
 }
 
 export interface PlanBlock {
@@ -92,6 +93,12 @@ export type EinheitStatus =
   | 'verschoben';
 
 export type Ort = 'halle' | 'draussen' | 'beides';
+
+export interface EinheitTest {
+  testId: ID;
+  ausgenommen: ID[]; // Kinder, deren Ergebnis nicht mehr nachgeholt wird
+  abgeschlossen?: boolean; // Rest nicht mehr nachfragen
+}
 
 export interface Einheit {
   id: ID;
@@ -117,6 +124,7 @@ export interface Einheit {
   notizen: string;
   vertretungsnotiz: string;
   ausfallGrund: string;
+  tests?: EinheitTest[]; // in dieser Einheit durchgeführte Tests/Bewertungen
   zusatz?: boolean; // Termin ist die Zusatz-Doppelstunde
   sollDatum?: Datum; // ursprünglicher Regeltermin, falls diese Einheit verlegt wurde
   wettkampfId?: ID;

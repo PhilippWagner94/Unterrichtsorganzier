@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, neueId } from '../../db/db';
 import { stufeIm, useAktivesSchuljahr, useKlassenAktiv } from '../../db/hooks';
@@ -34,8 +34,9 @@ export default function TestPage() {
   const { daten: t, set, flush } = useAutosave(db.tests, id);
   const sj = useAktivesSchuljahr();
   const klassen = useKlassenAktiv();
-  const [klasseId, setKlasseId] = useState('');
-  const [datum, setDatum] = useState(heute());
+  const [params] = useSearchParams();
+  const [klasseId, setKlasseId] = useState(params.get('klasse') ?? '');
+  const [datum, setDatum] = useState(params.get('datum') ?? heute());
   const [eingaben, setEingaben] = useState<Record<string, Eingabe>>({});
   const [toast, zeigeToast] = useToast();
 

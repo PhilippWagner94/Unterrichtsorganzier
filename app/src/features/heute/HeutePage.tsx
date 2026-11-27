@@ -9,6 +9,8 @@ import { freiBezeichnung } from '../../lib/plan';
 import { planNeuVerteilen } from '../../lib/planAktionen';
 import { letztesBackup } from '../../db/backup';
 import type { Einheit } from '../../db/types';
+import { offeneTests } from '../../lib/offeneTests';
+import { vollerName } from '../../lib/schuljahr';
 
 export default function HeutePage() {
   const nav = useNavigate();
@@ -22,7 +24,12 @@ export default function HeutePage() {
   const backup = useLiveQuery(() => letztesBackup(), [], null);
   const schuelerAnzahl = useLiveQuery(() => db.schueler.count(), [], 0) ?? 0;
 
+  const tests = useLiveQuery(() => db.tests.toArray(), [], []) ?? [];
+  const alleSchueler = useLiveQuery(() => db.schueler.toArray(), [], []) ?? [];
+  const ergebnisse = useLiveQuery(() => db.testergebnisse.toArray(), [], []) ?? [];
   const aktiv = aktiveKlassen(klassen, sj);
+  const offen = offeneTests(einheiten.filter((e) => aktiv.some((a) => a.klasse.id === e.klasseId)), tests, alleSchueler, ergebnisse, h);
+  const klasseName = (id: string) => klassen.find((k) => k.id === id)?.name ?? '';
   const lbName = (e: Einheit) => (e.istPuffer ? 'Pufferstunde' : lernbereiche.find((l) => l.id === e.lernbereichId)?.name ?? '');
   const heutige = einheiten.filter((e) => e.datum === h && aktiv.some((a) => a.klasse.id === e.klasseId));
   const kommendeWk = wettkaempfe.filter((w) => w.datum >= h && w.datum <= addTage(h, 21)).sort((a, b) => a.datum.localeCompare(b.datum));
@@ -44,6 +51,22 @@ export default function HeutePage() {
           <div className="small">{backup ? `Letztes Backup vom ${backup.slice(0, 10).split('-').reverse().join('.')}.` : 'Noch kein Backup gespeichert.'} Daten liegen nur auf diesem Gerät.</div>
           <div className="btn-row"><Button small onClick={() => nav('/mehr')}>Jetzt sichern</Button></div>
         </Card>
+      ) : null}
+
+      {offen.length ? (
+        <Section title="Noten noch offen">
+          {offen.map((o) => (
+            <Card key={o.einheit.id + o.test.id}>
+              <Link to={`/test/${o.test.id}?klasse=${o.einheit.klasseId}&datum=${o.einheit.datum}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <strong>{o.test.name}</strong> · Klasse {klasseName(o.einheit.klasseId)} · {o.einheit.datum.split('-').reverse().slice(0, 2).join('.')}.
+                <div className="small">{o.fehlend.map((s) => vollerName(s)).join(', ')}</div>
+              </Link>
+              <div className="btn-row">
+                <Link className="btn small secondary" to={`/einheit/${o.einheit.id}`} style={{ textDecoration: 'none' }}>In der Einheit abschließen</Link>
+              </div>
+            </Card>
+          ))}
+        </Section>
       ) : null}
 
       {aktiv.length === 0 ? (
