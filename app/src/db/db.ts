@@ -1,6 +1,8 @@
 import Dexie, { type Table } from 'dexie';
 import type {
   Aufgabe,
+  Zeiteintrag,
+  ZeitKategorie,
   Anhang,
   Einheit,
   Einstellung,
@@ -41,6 +43,8 @@ export class OrganizerDB extends Dexie {
   lernzielMarken!: Table<LernzielMarke, string>;
   einstellungen!: Table<Einstellung, string>;
   aufgaben!: Table<Aufgabe, string>;
+  zeiten!: Table<Zeiteintrag, string>;
+  zeitKategorien!: Table<ZeitKategorie, string>;
 
   constructor(name = 'unterrichtsorganizer') {
     super(name);
@@ -65,6 +69,7 @@ export class OrganizerDB extends Dexie {
       einstellungen: 'key',
     });
     this.version(2).stores({ aufgaben: 'id, faellig, erledigt, einheitId' });
+    this.version(3).stores({ zeiten: 'id, datum, kategorieId', zeitKategorien: 'id' });
   }
 }
 
@@ -91,6 +96,8 @@ export const TABELLEN = [
   'lernzielMarken',
   'einstellungen',
   'aufgaben',
+  'zeiten',
+  'zeitKategorien',
 ] as const;
 
 export type TabellenName = (typeof TABELLEN)[number];

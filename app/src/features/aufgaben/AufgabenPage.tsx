@@ -6,8 +6,11 @@ import type { Aufgabe } from '../../db/types';
 import { Button, Card, Chip, Empty, Page, Section } from '../../components/ui';
 import { addTage, formatLang, heute, wochentag } from '../../lib/dates';
 import { ART_LABEL, KATEGORIE_LABEL, aufgabenAm, ohneDatum, ueberfaellig, verpflichtungenAm } from '../../lib/aufgaben';
+import { aufgabeZeit, spanne } from '../../lib/zeit';
 import { freiBezeichnung } from '../../lib/plan';
 import { AufgabeSheet, type AufgabeVorgabe } from './AufgabeSheet';
+
+const aufgabeZeitText = (a: Aufgabe) => { const t = aufgabeZeit(a); return t ? spanne(t.von, t.bis) : undefined; };
 
 export function AufgabeZeile({ a, onEdit, klassen }: { a: Aufgabe; onEdit: () => void; klassen: Map<string, string> }) {
   const verpf = a.typ === 'verpflichtung';
@@ -27,7 +30,7 @@ export function AufgabeZeile({ a, onEdit, klassen }: { a: Aufgabe; onEdit: () =>
       <button className="main" onClick={onEdit} style={{ textAlign: 'left', background: 'none', border: 0, padding: 0, color: 'inherit', font: 'inherit' }}>
         <div className="title" style={a.erledigt ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}>{a.titel}</div>
         <div className="sub">
-          {[verpf && a.zeit, verpf && a.ort, a.klasseId && klassen.get(a.klasseId) && `Klasse ${klassen.get(a.klasseId)}`, !verpf && a.kategorie && KATEGORIE_LABEL[a.kategorie], a.details].filter(Boolean).join(' · ')}
+          {[verpf && aufgabeZeitText(a), verpf && a.ort, a.klasseId && klassen.get(a.klasseId) && `Klasse ${klassen.get(a.klasseId)}`, !verpf && a.kategorie && KATEGORIE_LABEL[a.kategorie], a.details].filter(Boolean).join(' · ')}
         </div>
       </button>
       {a.einheitId ? <Link to={`/einheit/${a.einheitId}`} style={{ textDecoration: 'none' }}>📅</Link> : null}

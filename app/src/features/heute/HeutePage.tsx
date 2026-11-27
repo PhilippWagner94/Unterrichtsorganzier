@@ -10,6 +10,7 @@ import { planNeuVerteilen } from '../../lib/planAktionen';
 import { letztesBackup } from '../../db/backup';
 import type { Einheit } from '../../db/types';
 import { aufgabenAm, ueberfaellig, verpflichtungenAm } from '../../lib/aufgaben';
+import { aufgabeZeit, einheitZeit, spanne } from '../../lib/zeit';
 import { offeneTests } from '../../lib/offeneTests';
 import { vollerName } from '../../lib/schuljahr';
 
@@ -61,9 +62,12 @@ export default function HeutePage() {
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <strong>Aufgaben und Termine</strong>
-          <Link className="btn small secondary" to="/aufgaben" style={{ textDecoration: 'none' }}>Öffnen</Link>
+          <span style={{ display: 'flex', gap: 6 }}>
+            <Link className="btn small secondary" to={`/tag/${h}`} style={{ textDecoration: 'none' }}>Tagesplan</Link>
+            <Link className="btn small secondary" to="/aufgaben" style={{ textDecoration: 'none' }}>Aufgaben</Link>
+          </span>
         </div>
-        {verpfHeute.map((v) => <div key={v.id} className="small">🕒 {v.zeit ? v.zeit + ' · ' : ''}{v.titel}{v.ort ? ` (${v.ort})` : ''}</div>)}
+        {verpfHeute.map((v) => <div key={v.id} className="small">🕒 {(() => { const t = aufgabeZeit(v); return t ? spanne(t.von, t.bis) + ' · ' : ''; })()}{v.titel}{v.ort ? ` (${v.ort})` : ''}</div>)}
         {aufHeute.map((a) => <div key={a.id} className="small">☐ {a.titel}{a.faellig && a.faellig < h ? ' (überfällig)' : ''}</div>)}
         {aufMorgen.length ? <div className="muted small">Morgen fällig: {aufMorgen.map((a) => a.titel).join(', ')}</div> : null}
         {!verpfHeute.length && !aufHeute.length && !aufMorgen.length ? <div className="muted small">Heute nichts Offenes.</div> : null}
@@ -102,7 +106,7 @@ export default function HeutePage() {
               return (
                 <div key={e.id} className="row">
                   <Link to={`/einheit/${e.id}`} className="main" style={{ color: 'inherit', textDecoration: 'none' }}>
-                    <div className="title">Klasse {k?.name} {e.status !== 'geplant' ? <Chip kind={e.status === 'ausfall' ? 'red' : 'gray'}>{e.status}</Chip> : null}</div>
+                    <div className="title">{(() => { const t = einheitZeit(e, k); return t ? `${t.von}–${t.bis} · ` : ''; })()}Klasse {k?.name} {e.status !== 'geplant' ? <Chip kind={e.status === 'ausfall' ? 'red' : 'gray'}>{e.status}</Chip> : null}</div>
                     <div className="sub">{e.titel || lbName(e) || 'noch nicht verplant'}</div>
                   </Link>
                   {e.status === 'geplant' ? <Button small onClick={() => gehalten(e)}>✓ Gehalten</Button> : null}

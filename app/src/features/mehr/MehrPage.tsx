@@ -45,6 +45,7 @@ export default function MehrPage() {
     <Page title="Mehr">
       <Section title="Planung" />
       <List>
+        <Row title="⏱ Arbeitszeit und Statistik" sub="Zeiten erfassen, auswerten, vergleichen" to="/arbeitszeit" />
         <Row title="✅ Aufgaben und Verpflichtungen" sub="To-dos, Aufsichten, Beratungen, Gespräche" to="/aufgaben" />
         <Row title="🏆 Wettkampftermine" to="/wettkaempfe" />
         <Row title="📝 Tests und Ergebnisse" to="/tests" />

@@ -134,6 +134,7 @@ export default function KalenderPage() {
           <Link to="/klassen">Zuerst eine Klasse anlegen</Link>
         )}
         <div className="btn-row">
+          {tag ? <Link className="btn small" to={`/tag/${tag}`} style={{ textDecoration: 'none' }}>🕒 Tagesplan mit Uhrzeiten</Link> : null}
           <Link className="btn secondary small" to="/wettkaempfe" style={{ textDecoration: 'none' }}>Wettkampftermine</Link>
           <Button kind="secondary" onClick={() => setTag(null)}>Schließen</Button>
         </div>

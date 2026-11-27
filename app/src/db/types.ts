@@ -28,7 +28,9 @@ export interface Aufgabe {
   wiederholung?: 'einmalig' | 'woechentlich' | 'zweiwoechentlich';
   wochentag?: number; // 1 = Montag … 5 = Freitag
   woche?: 'gerade' | 'ungerade'; // bei zweiwöchentlich: in welchen Kalenderwochen
-  zeit?: string; // z. B. "07:30–08:00"
+  von?: string; // Uhrzeit 'HH:MM'
+  bis?: string;
+  zeit?: string; // (alt) freier Text, z. B. "07:30–08:00"
   ort?: string;
   erstellt: number;
 }
@@ -85,6 +87,8 @@ export interface Klasse {
   zusatzWochentag: number;
   zusatzWoche?: 'gerade' | 'ungerade'; // in welchen Kalenderwochen (ISO) die Zusatzstunde liegt; Standard ungerade
   archiviert: boolean;
+  beginn?: string; // Beginn der Doppelstunde, 'HH:MM'
+  zusatzBeginn?: string; // Beginn der Zusatz-Doppelstunde
 }
 
 export type Geschlecht = 'w' | 'm' | 'd';
@@ -152,6 +156,8 @@ export interface Einheit {
   vertretungsnotiz: string;
   ausfallGrund: string;
   tests?: EinheitTest[]; // in dieser Einheit durchgeführte Tests/Bewertungen
+  beginn?: string; // abweichender Beginn dieser Einheit ('HH:MM')
+  ende?: string; // abweichendes Ende
   zusatz?: boolean; // Termin ist die Zusatz-Doppelstunde
   sollDatum?: Datum; // ursprünglicher Regeltermin, falls diese Einheit verlegt wurde
   wettkampfId?: ID;
@@ -261,4 +267,35 @@ export interface LernzielMarke {
 export interface Einstellung {
   key: string;
   value: unknown;
+}
+
+export interface ZeitKategorie {
+  id: ID;
+  name: string;
+  sortierung: number;
+}
+
+/** Erfasste Arbeitszeit (manuell, per Stoppuhr oder aus dem Tagesplan übernommen). */
+export interface Zeiteintrag {
+  id: ID;
+  datum: Datum;
+  von: string; // 'HH:MM'
+  bis: string;
+  kategorieId: ID;
+  notiz: string;
+  bezugTyp?: 'einheit' | 'verpflichtung';
+  bezugId?: ID;
+  erstellt: number;
+}
+
+export interface ZeitEinstellungen {
+  doppelMin: number; // Länge einer Doppelstunde in Minuten
+  schuleVon: string; // übliche Anwesenheit in der Schule
+  schuleBis: string;
+}
+
+export interface ZeitGruppe {
+  id: ID;
+  name: string;
+  kategorieIds: ID[];
 }

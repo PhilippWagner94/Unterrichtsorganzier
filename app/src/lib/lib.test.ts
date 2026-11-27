@@ -339,3 +339,42 @@ describe('Aufgaben und Verpflichtungen', () => {
     expect(ueberfaellig([a], '2026-11-27')).toHaveLength(1);
   });
 });
+
+import { dauerMin, einheitZeit, formatDauer, aufgabeZeit, fromMin } from './zeit';
+import { zeitraum, vorherigerZeitraum, imZeitraum, summe, perioden, nachKategorie } from './arbeitszeit';
+describe('Zeiten und Arbeitszeit', () => {
+  const z = (datum: string, von: string, bis: string, k = 'zk-unterricht') => ({ id: datum + von, datum, von, bis, kategorieId: k, notiz: '', erstellt: 0 }) as never;
+  it('rechnet Uhrzeiten', () => {
+    expect(dauerMin('07:30', '09:00')).toBe(90);
+    expect(dauerMin('10:00', '09:00')).toBe(0);
+    expect(formatDauer(95)).toBe('1 h 35 min');
+    expect(fromMin(485)).toBe('08:05');
+  });
+  it('Einheitszeit aus Klasse und Override', () => {
+    const k = { beginn: '08:45', zusatzBeginn: '10:00' } as never;
+    expect(einheitZeit({ datum: 'x' } as never, k)).toEqual({ von: '08:45', bis: '10:15' });
+    expect(einheitZeit({ zusatz: true } as never, k, 80)).toEqual({ von: '10:00', bis: '11:20' });
+    expect(einheitZeit({ beginn: '09:00', ende: '10:00' } as never, k)).toEqual({ von: '09:00', bis: '10:00' });
+    expect(einheitZeit({} as never, {} as never)).toBeUndefined();
+  });
+  it('liest altes Zeitfeld', () => {
+    expect(aufgabeZeit({ zeit: '7:30–08:00' } as never)).toEqual({ von: '07:30', bis: '08:00' });
+    expect(aufgabeZeit({ von: '09:00' } as never)).toEqual({ von: '09:00', bis: undefined });
+  });
+  it('Zeiträume und Summen', () => {
+    const w = zeitraum('letzteWoche', '2026-11-27'); // Fr
+    expect(w).toMatchObject({ von: '2026-11-16', bis: '2026-11-22' });
+    expect(vorherigerZeitraum(w, 'letzteWoche').von).toBe('2026-11-09');
+    expect(zeitraum('dieserMonat', '2026-11-27')).toMatchObject({ von: '2026-11-01', bis: '2026-11-30' });
+    expect(zeitraum('halbjahr', '2026-11-27')).toMatchObject({ von: '2026-08-01', bis: '2027-01-31' });
+    expect(zeitraum('halbjahr', '2027-03-01').label).toBe('2. Halbjahr');
+    const l = [z('2026-11-17', '08:00', '09:30'), z('2026-11-18', '14:30', '15:30', 'zk-vorbereitung'), z('2026-10-01', '08:00', '09:00')];
+    expect(summe(imZeitraum(l, w))).toBe(150);
+    expect(summe(imZeitraum(l, w, new Set(['zk-vorbereitung'])))).toBe(60);
+    expect(nachKategorie(l).get('zk-unterricht')).toBe(150);
+    const p = perioden(l, 'woche', '2026-11-27');
+    expect(p).toHaveLength(8);
+    expect(p.find((x) => x.von === '2026-11-16')?.minuten).toBe(150);
+    expect(perioden(l, 'schuljahr', '2026-11-27')).toHaveLength(1);
+  });
+});

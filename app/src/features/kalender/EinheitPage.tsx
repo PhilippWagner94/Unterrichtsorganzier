@@ -253,6 +253,10 @@ export default function EinheitPage() {
           await planNeuVerteilen(e.klasseId, e.schuljahrId);
         }}
       />
+      <div className="grid2">
+        <TextField label={`Beginn${klasse?.beginn || klasse?.zusatzBeginn ? ' (leer = wie Klasse)' : ''}`} type="time" value={e.beginn ?? ''} onChange={(v) => set({ beginn: v || undefined })} />
+        <TextField label="Ende (leer = Doppelstunde)" type="time" value={e.ende ?? ''} onChange={(v) => set({ ende: v || undefined })} />
+      </div>
       <div className="muted small">KW {isoWoche(e.datum)} ({isoWoche(e.datum) % 2 === 0 ? 'gerade' : 'ungerade'}){e.zusatz ? ' · Zusatz-Doppelstunde' : ''}{e.sollDatum && e.sollDatum !== e.datum ? ` · verlegt (Regeltermin: ${formatLang(e.sollDatum)})` : ''}</div>
       <div className="btn-row">
         <Button

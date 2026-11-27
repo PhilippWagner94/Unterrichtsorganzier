@@ -83,7 +83,10 @@ export function AufgabeSheet({ offen, onClose, aufgabe, vorgabe }: { offen: bool
               ) : null}
             </>
           )}
-          <TextField label="Uhrzeit (z. B. 07:30–08:00)" value={a.zeit ?? ''} onChange={(v) => set({ zeit: v })} />
+          <div className="grid2">
+            <TextField label="Von (Uhrzeit)" type="time" value={a.von ?? ''} onChange={(v) => set({ von: v || undefined, zeit: undefined })} />
+            <TextField label="Bis" type="time" value={a.bis ?? ''} onChange={(v) => set({ bis: v || undefined, zeit: undefined })} />
+          </div>
           <TextField label="Ort" value={a.ort ?? ''} onChange={(v) => set({ ort: v })} />
         </>
       )}

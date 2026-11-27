@@ -31,6 +31,8 @@ export function KlasseFormular({
   const [wochentag, setWochentag] = useState(1);
   const [zusatz, setZusatz] = useState(false);
   const [zusatzTag, setZusatzTag] = useState(3);
+  const [beginn, setBeginn] = useState('');
+  const [zusatzBeginn, setZusatzBeginn] = useState('');
   const [zusatzWoche, setZusatzWoche] = useState<'gerade' | 'ungerade'>('ungerade');
 
   useEffect(() => {
@@ -41,6 +43,8 @@ export function KlasseFormular({
     setZusatz(klasse?.zusatzAktiv ?? false);
     setZusatzTag(klasse?.zusatzWochentag ?? 3);
     setZusatzWoche(klasse?.zusatzWoche ?? 'ungerade');
+    setBeginn(klasse?.beginn ?? '');
+    setZusatzBeginn(klasse?.zusatzBeginn ?? '');
   }, [offen, klasse, sj]);
 
   async function speichern() {
@@ -53,6 +57,8 @@ export function KlasseFormular({
       zusatzAktiv: zusatz,
       zusatzWochentag: zusatzTag,
       zusatzWoche,
+      beginn: beginn || undefined,
+      zusatzBeginn: zusatzBeginn || undefined,
       archiviert: klasse?.archiviert ?? false,
     };
     await db.klassen.put(neu);
@@ -67,11 +73,13 @@ export function KlasseFormular({
       <ChipAuswahl optionen={STUFEN} wert={stufe} onChange={setStufe} />
       <div className="muted small">Wochentag der Doppelstunde</div>
       <ChipAuswahl optionen={TAGE} wert={wochentag} onChange={setWochentag} />
+      <TextField label="Beginn der Doppelstunde (Uhrzeit)" type="time" value={beginn} onChange={setBeginn} />
       <Check label="Zusätzliche Doppelstunde alle 2 Wochen" checked={zusatz} onChange={setZusatz} />
       {zusatz ? (
         <>
           <div className="muted small">Wochentag der zusätzlichen Doppelstunde</div>
           <ChipAuswahl optionen={TAGE} wert={zusatzTag} onChange={setZusatzTag} />
+          <TextField label="Beginn der Zusatz-Doppelstunde (Uhrzeit)" type="time" value={zusatzBeginn} onChange={setZusatzBeginn} />
           <div className="muted small">In welchen Kalenderwochen?</div>
           <ChipAuswahl
             optionen={[{ value: 'ungerade' as const, label: 'Ungerade KW' }, { value: 'gerade' as const, label: 'Gerade KW' }]}
