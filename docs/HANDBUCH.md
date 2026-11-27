@@ -156,7 +156,9 @@ Mehr → Foto importieren (oder „Aus Foto" in einer Klasse):
 1. Foto aufnehmen oder aus den Fotos wählen.
 2. Die Texterkennung läuft **auf dem Gerät**. Beim ersten Mal werden einmalig Sprachdaten (ca. 15 MB) geladen, danach geht es auch ohne Internet.
 3. Den erkannten Text **prüfen und korrigieren**. Texterkennung macht Fehler, besonders bei Handschrift.
-4. Speichern als: Kinderliste einer Klasse (Foto wird nicht gespeichert), Spiel (erste Zeile = Titel), methodische Reihe (Schritte aus Nummern), Notiz oder nur Bild ablegen. Bei Spiel, Reihe, Notiz wird das Originalfoto angehängt.
+4. Speichern als: **Unterrichtsstunde (ganz oder teilweise) in eine Einheit**, Kinderliste einer Klasse (Foto wird nicht gespeichert), Spiel (erste Zeile = Titel), methodische Reihe (Schritte aus Nummern), Notiz oder nur Bild ablegen. Bei Spiel, Reihe, Notiz wird das Originalfoto angehängt.
+
+**Stunde aus Foto:** Wähle „Unterrichtsstunde in eine Einheit", dann Klasse und Einheit. Der Text wird nach Überschriften wie „Aufwärmen", „Hauptteil", „Ausklang", „Material", „Ort", „Wetter", „Notizen", „Reflexion" aufgeteilt (ohne Überschriften landet alles im Hauptteil). Du prüfst und korrigierst jedes Feld. Schon vorhandener Inhalt der Einheit bleibt, der neue Text wird darunter angefügt. So kannst du auch nur Teile hochladen oder mehrere Fotos nacheinander in dieselbe Einheit übernehmen. Das Foto wird an die Einheit angehängt.
 
 ## 14. Backup und Datensicherheit
 

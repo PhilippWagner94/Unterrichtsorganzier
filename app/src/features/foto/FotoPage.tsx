@@ -8,9 +8,17 @@ import { verkleinereBild } from '../../lib/bild';
 import { erkenneText } from './ocr';
 import { schuelerAusFreitext, parseSchuelerZeilen } from '../../lib/schuelerImport';
 import { useKlassenAktiv } from '../../db/hooks';
-import { alsSchritte, bereinige, titelUndRest } from './zeilen';
+import { LEERE_TEILE, alsSchritte, bereinige, stundeAusText, titelUndRest, type StundenTeile } from './zeilen';
+import { formatKurz } from '../../lib/dates';
 
-type Ziel = 'spiel' | 'reihe' | 'notiz' | 'foto' | 'kinder';
+function ortAusText(t: string): 'halle' | 'draussen' | undefined {
+  const s = t.toLowerCase();
+  if (/halle/.test(s)) return 'halle';
+  if (/drau(ß|ss)en|platz|hof|wiese|stadion|freien/.test(s)) return 'draussen';
+  return undefined;
+}
+
+type Ziel = 'spiel' | 'reihe' | 'notiz' | 'foto' | 'kinder' | 'einheit';
 
 export default function FotoPage() {
   const nav = useNavigate();
@@ -25,6 +33,15 @@ export default function FotoPage() {
   const [klasseId, setKlasseId] = useState(params.get('klasse') ?? '');
   const [kinderText, setKinderText] = useState('');
   const klassen = useKlassenAktiv();
+  const [teile, setTeile] = useState<StundenTeile>(LEERE_TEILE);
+  const [einheitKlasse, setEinheitKlasse] = useState('');
+  const [einheitId, setEinheitId] = useState('');
+  const klasseFuerEinheit = einheitKlasse || klassen[0]?.klasse.id || '';
+  const einheitenListe = (useLiveQuery(() => (klasseFuerEinheit ? db.einheiten.where('klasseId').equals(klasseFuerEinheit).toArray() : []), [klasseFuerEinheit], []) ?? [])
+    .filter((e) => e.status !== 'ausfall' && e.status !== 'verschoben')
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  const naechste = einheitenListe.find((e) => e.datum >= new Date().toISOString().slice(0, 10)) ?? einheitenListe[einheitenListe.length - 1];
+  const gewaehlteEinheit = einheitenListe.find((e) => e.id === einheitId) ?? naechste;
   const vorhandene = useLiveQuery(() => (klasseId ? db.schueler.where('klasseId').equals(klasseId).count() : 0), [klasseId], 0) ?? 0;
   const kinderVorschau = parseSchuelerZeilen(kinderText);
   const [fertigErkannt, setFertig] = useState(false);
@@ -45,6 +62,7 @@ export default function FotoPage() {
       const roh = await erkenneText(klein, (p, s) => { setAnteil(p); setStatus(s); });
       setText(bereinige(roh));
       setKinderText(schuelerAusFreitext(bereinige(roh)));
+      setTeile(stundeAusText(bereinige(roh)));
     } catch (e) {
       setFehler('Die Texterkennung hat nicht funktioniert. Du kannst den Text unten selbst eintippen oder nur das Bild ablegen. (' + (e instanceof Error ? e.message : String(e)) + ')');
     } finally {
@@ -61,11 +79,30 @@ export default function FotoPage() {
     nav(`/klasse/${k}`);
   }
 
+  async function einheitUebernehmen() {
+    const e = gewaehlteEinheit;
+    if (!e) return;
+    const neu = (alt: string, add: string) => (add.trim() ? (alt.trim() ? `${alt}\n\n${add.trim()}` : add.trim()) : alt);
+    await db.einheiten.update(e.id, {
+      titel: e.titel ? e.titel : teile.titel.trim(),
+      aufwaermen: neu(e.aufwaermen, teile.aufwaermen),
+      hauptteil: neu(e.hauptteil, teile.hauptteil),
+      ausklang: neu(e.ausklang, teile.ausklang),
+      material: neu(e.material, teile.material),
+      ...(ortAusText(teile.ort) ? { ort: ortAusText(teile.ort)! } : {}),
+      wetterAlternative: neu(e.wetterAlternative, teile.wetterAlternative),
+      notizen: neu(e.notizen, teile.notizen),
+      reflexion: neu(e.reflexion, teile.reflexion),
+    });
+    if (bild) await db.anhaenge.add({ id: neueId(), bezugTyp: 'einheit', bezugId: e.id, name: `Foto ${new Date().toLocaleDateString('de-DE')}.jpg`, mime: 'image/jpeg', blob: bild, erstellt: Date.now() });
+    nav(`/einheit/${e.id}`);
+  }
+
   async function speichern() {
     if (!bild) return;
     const jetzt = Date.now();
     const { titel, rest } = titelUndRest(text);
-    let bezugTyp: 'spiel' | 'reihe' | 'notiz' | 'foto' = ziel === 'kinder' ? 'foto' : ziel;
+    let bezugTyp: 'spiel' | 'reihe' | 'notiz' | 'foto' = ziel === 'kinder' || ziel === 'einheit' ? 'foto' : ziel;
     let bezugId: string | null = null;
     if (ziel === 'spiel') {
       bezugId = neueId();
@@ -99,7 +136,22 @@ export default function FotoPage() {
       {bild && fertigErkannt ? (
         <>
           {url ? <img src={url} alt="Foto" style={{ width: '100%', borderRadius: 10, marginBottom: 12 }} /> : null}
-          {ziel === 'kinder' ? (
+          {ziel === 'einheit' ? (
+            <>
+              <Card kind="soft"><div className="small">Der Text wurde nach Überschriften wie Aufwärmen, Hauptteil, Ausklang, Material aufgeteilt. Prüfe die Felder. Schon vorhandener Inhalt der Einheit bleibt erhalten, der neue Text wird darunter angefügt. Du kannst mehrere Fotos nacheinander in dieselbe Einheit übernehmen.</div></Card>
+              <SelectField label="Klasse" value={klasseFuerEinheit} onChange={(v) => { setEinheitKlasse(v); setEinheitId(''); }} options={klassen.map((k) => ({ value: k.klasse.id, label: `Klasse ${k.klasse.name}` }))} />
+              <SelectField
+                label="Einheit"
+                value={gewaehlteEinheit?.id ?? ''}
+                onChange={setEinheitId}
+                options={einheitenListe.length ? einheitenListe.map((e) => ({ value: e.id, label: `${formatKurz(e.datum)}${e.titel ? ' · ' + e.titel : ''}${e.status === 'gehalten' ? ' (gehalten)' : ''}` })) : [{ value: '', label: 'Keine Einheiten (zuerst Termine anlegen)' }]}
+              />
+              {([['titel', 'Titel / Thema'], ['aufwaermen', 'Aufwärmen / Einstieg'], ['hauptteil', 'Hauptteil'], ['ausklang', 'Ausklang'], ['material', 'Material'], ['ort', 'Ort (Halle oder draußen)'], ['wetterAlternative', 'Wetteralternative'], ['notizen', 'Notizen'], ['reflexion', 'Reflexion']] as const).map(([k, l]) => (
+                <TextArea key={k} label={l} value={teile[k]} onChange={(v) => setTeile({ ...teile, [k]: v })} rows={k === 'titel' || k === 'ort' ? 1 : 4} />
+              ))}
+              <Button small kind="secondary" onClick={() => setTeile(stundeAusText(text))}>Neu aus erkanntem Text aufteilen</Button>
+            </>
+          ) : ziel === 'kinder' ? (
             <>
               <TextArea label="Kinder: eine Zeile pro Kind (Vorname; Name; TT.MM.JJJJ; w/m/d)" value={kinderText} onChange={setKinderText} rows={14} />
               <Card kind="soft">
@@ -122,6 +174,7 @@ export default function FotoPage() {
             value={ziel}
             onChange={setZiel}
             options={[
+              { value: 'einheit', label: 'Unterrichtsstunde (ganz oder teilweise) in eine Einheit' },
               { value: 'kinder', label: 'Kinderliste einer Klasse (Foto wird nicht gespeichert)' },
               { value: 'spiel', label: 'Spiel (erste Zeile = Titel)' },
               { value: 'reihe', label: 'Methodische Reihe (Schritte aus Nummern)' },
@@ -129,7 +182,9 @@ export default function FotoPage() {
               { value: 'foto', label: 'Nur Bild ablegen' },
             ]}
           />
-          {ziel === 'kinder' ? (
+          {ziel === 'einheit' ? (
+            <Button block onClick={einheitUebernehmen} disabled={!gewaehlteEinheit}>In Einheit übernehmen</Button>
+          ) : ziel === 'kinder' ? (
             <Button block onClick={kinderUebernehmen} disabled={!kinderVorschau.ok.length || klassen.length === 0}>Kinder übernehmen</Button>
           ) : (
             <Button block onClick={speichern}>Speichern</Button>

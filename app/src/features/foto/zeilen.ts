@@ -38,3 +38,62 @@ export function alsSchritte(text: string): ReihenSchritt[] {
   }
   return schritte;
 }
+
+export interface StundenTeile {
+  titel: string;
+  aufwaermen: string;
+  hauptteil: string;
+  ausklang: string;
+  material: string;
+  ort: string;
+  wetterAlternative: string;
+  notizen: string;
+  reflexion: string;
+}
+
+export const LEERE_TEILE: StundenTeile = { titel: '', aufwaermen: '', hauptteil: '', ausklang: '', material: '', ort: '', wetterAlternative: '', notizen: '', reflexion: '' };
+
+const KOPF = /^\s*(thema|titel|aufw(?:ä|ae|a)rmen|erw(?:ä|ae|a)rmung|einstieg|hauptteil(?:\s*\d)?|hauptteil|ausklang|abschluss|cool[- ]?down|material|ger(?:ä|ae|a)te|ort|wetter(?:alternative)?|notizen?|bemerkungen?|reflexion)\s*[:\-–]\s*(.*)$/i;
+const KOPF_OHNE_DOPPELPUNKT = /^\s*(aufw(?:ä|ae|a)rmen|erw(?:ä|ae|a)rmung|einstieg|hauptteil(?:\s*\d)?|ausklang|abschluss|cool[- ]?down|material|ger(?:ä|ae|a)te|reflexion)\s*$/i;
+
+function feld(k: string): keyof StundenTeile {
+  const s = k.toLowerCase();
+  if (s.startsWith('thema') || s.startsWith('titel')) return 'titel';
+  if (s.startsWith('aufw') || s.startsWith('erw') || s.startsWith('einstieg')) return 'aufwaermen';
+  if (s.startsWith('haupt')) return 'hauptteil';
+  if (s.startsWith('ausk') || s.startsWith('absch') || s.startsWith('cool')) return 'ausklang';
+  if (s.startsWith('mat') || s.startsWith('ger')) return 'material';
+  if (s.startsWith('ort')) return 'ort';
+  if (s.startsWith('wetter')) return 'wetterAlternative';
+  if (s.startsWith('refl')) return 'reflexion';
+  return 'notizen';
+}
+
+/** Teilt erkannten Text einer Stundenplanung anhand von Überschriften (Aufwärmen, Hauptteil, Ausklang, Material …) auf. Ohne Überschriften landet alles im Hauptteil. */
+export function stundeAusText(text: string): StundenTeile {
+  const t: StundenTeile = { ...LEERE_TEILE };
+  let aktuell: keyof StundenTeile | null = null;
+  let gefunden = false;
+  const vorspann: string[] = [];
+  const add = (f: keyof StundenTeile, z: string) => { t[f] = t[f] ? `${t[f]}\n${z}` : z; };
+  for (const zeile of text.split('\n')) {
+    const m = zeile.match(KOPF);
+    const m2 = !m ? zeile.match(KOPF_OHNE_DOPPELPUNKT) : null;
+    if (m || m2) {
+      gefunden = true;
+      aktuell = feld((m ?? m2)![1]);
+      const rest = (m?.[2] ?? '').trim();
+      if (rest) add(aktuell, rest);
+      continue;
+    }
+    if (!zeile.trim()) continue;
+    if (aktuell) add(aktuell, zeile.trim());
+    else vorspann.push(zeile.trim());
+  }
+  if (!gefunden) return { ...LEERE_TEILE, hauptteil: vorspann.join('\n') };
+  if (vorspann.length) {
+    if (!t.titel) t.titel = vorspann[0];
+    if (vorspann.length > 1) t.notizen = [vorspann.slice(1).join('\n'), t.notizen].filter(Boolean).join('\n');
+  }
+  return t;
+}

@@ -16,3 +16,18 @@ describe('OCR-Text', () => {
     expect(s[2].titel).toBe('Kerze');
   });
 });
+
+import { stundeAusText } from './zeilen';
+describe('Stunde aus Text', () => {
+  it('teilt nach Überschriften auf', () => {
+    const t = stundeAusText('Staffelspiele\nAufwärmen: Fangspiel\nlocker laufen\nHauptteil\nStaffeln mit Ball\nAusklang: Dehnen\nMaterial: Bälle, Hütchen');
+    expect(t.titel).toBe('Staffelspiele');
+    expect(t.aufwaermen).toBe('Fangspiel\nlocker laufen');
+    expect(t.hauptteil).toBe('Staffeln mit Ball');
+    expect(t.ausklang).toBe('Dehnen');
+    expect(t.material).toBe('Bälle, Hütchen');
+  });
+  it('ohne Überschriften alles in den Hauptteil', () => {
+    expect(stundeAusText('Nur Text\nzweite Zeile').hauptteil).toBe('Nur Text\nzweite Zeile');
+  });
+});
