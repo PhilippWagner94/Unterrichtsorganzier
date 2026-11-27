@@ -24,8 +24,8 @@ export default function LernzielePage() {
   const [params] = useSearchParams();
   const klasseId = params.get('klasse');
   const sj = useAktivesSchuljahr();
-  const lernbereiche = useLiveQuery(() => db.lernbereiche.orderBy('sortierung').toArray(), [], []) ?? [];
-  const lernziele = useLiveQuery(() => db.lernziele.orderBy('sortierung').toArray(), [], []) ?? [];
+  const lernbereiche = useLiveQuery(() => db.lernbereiche.toArray().then((l) => l.sort((a, b) => a.sortierung - b.sortierung)), [], []) ?? [];
+  const lernziele = useLiveQuery(() => db.lernziele.toArray().then((l) => l.sort((a, b) => a.sortierung - b.sortierung)), [], []) ?? [];
   const klasse = useLiveQuery(() => (klasseId ? db.klassen.get(klasseId) : undefined), [klasseId]);
   const einheiten = useLiveQuery(() => (klasseId ? db.einheiten.where('klasseId').equals(klasseId).toArray() : []), [klasseId], []) ?? [];
   const marken = useLiveQuery(() => (klasseId && sj ? db.lernzielMarken.where('[klasseId+schuljahrId]').equals([klasseId, sj.id]).toArray() : []), [klasseId, sj?.id], []) ?? [];

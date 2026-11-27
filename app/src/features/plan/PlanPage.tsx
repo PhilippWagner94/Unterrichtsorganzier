@@ -21,7 +21,7 @@ export default function PlanPage() {
   const { klasseId = '' } = useParams();
   const sj = useAktivesSchuljahr();
   const klasse = useLiveQuery(() => db.klassen.get(klasseId), [klasseId]);
-  const lernbereiche = useLiveQuery(() => db.lernbereiche.orderBy('sortierung').toArray(), [], []) ?? [];
+  const lernbereiche = useLiveQuery(() => db.lernbereiche.toArray().then((l) => l.sort((a, b) => a.sortierung - b.sortierung)), [], []) ?? [];
   const sjId = sj?.id ?? '';
   const bloecke = useLiveQuery(
     () => db.planBloecke.where('[klasseId+schuljahrId]').equals([klasseId, sjId]).sortBy('sortierung'),

@@ -9,7 +9,7 @@ export default function ReihePage() {
   const { id = '' } = useParams();
   const nav = useNavigate();
   const { daten: r, set, flush } = useAutosave(db.reihen, id);
-  const lernbereiche = useLiveQuery(() => db.lernbereiche.orderBy('sortierung').toArray(), [], []) ?? [];
+  const lernbereiche = useLiveQuery(() => db.lernbereiche.toArray().then((l) => l.sort((a, b) => a.sortierung - b.sortierung)), [], []) ?? [];
 
   if (r === undefined) return <Page title="Methodische Reihe" zurueck><Empty>Lädt …</Empty></Page>;
   if (r === null) return <Page title="Methodische Reihe" zurueck><Empty>Reihe nicht gefunden.</Empty></Page>;

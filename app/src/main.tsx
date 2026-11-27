@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
+import { Fehlergrenze } from './components/Fehlergrenze';
 import { seedBeiBedarf } from './db/seed';
 import { persistenterSpeicher } from './db/backup';
 import './styles.css';
@@ -17,7 +18,7 @@ async function start() {
   }
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App />
+      <Fehlergrenze><App /></Fehlergrenze>
     </StrictMode>,
   );
 }

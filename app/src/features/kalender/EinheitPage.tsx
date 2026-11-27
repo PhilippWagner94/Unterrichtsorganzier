@@ -88,7 +88,7 @@ export default function EinheitPage() {
   const { e, set, reload, flush } = useEinheitState(id);
   const klasse = useLiveQuery(() => (e ? db.klassen.get(e.klasseId) : undefined), [e?.klasseId]);
   const schuljahr = useLiveQuery(() => (e ? db.schuljahre.get(e.schuljahrId) : undefined), [e?.schuljahrId]);
-  const lernbereiche = useLiveQuery(() => db.lernbereiche.orderBy('sortierung').toArray(), [], []) ?? [];
+  const lernbereiche = useLiveQuery(() => db.lernbereiche.toArray().then((l) => l.sort((a, b) => a.sortierung - b.sortierung)), [], []) ?? [];
   const lernziele = useLiveQuery(() => db.lernziele.toArray(), [], []) ?? [];
   const spiele = useLiveQuery(() => db.spiele.toArray(), [], []) ?? [];
   const reihen = useLiveQuery(() => db.reihen.toArray(), [], []) ?? [];
