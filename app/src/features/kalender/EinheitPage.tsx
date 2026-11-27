@@ -2,14 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
+import { stufeIm } from '../../db/hooks';
 import type { Einheit, EinheitStatus, Ort } from '../../db/types';
 import {
-  Button, Card, Check, Chip, ChipAuswahl, Empty, Page, Section, SelectField, Sheet, TextArea, TextField, bestaetige,
+  Button, Card, Check, Chip, ChipAuswahl, Empty, Page, Section, SelectField, Sheet, TextArea, TextField, bestaetige, useToast,
 } from '../../components/ui';
 import { Anhaenge } from '../../components/Anhaenge';
 import { SpielAuswahl, ReiheAuswahl } from '../bibliothek/Auswahl';
 import { markiereAusfall, planNeuVerteilen, stelleEinheitWiederHer } from '../../lib/planAktionen';
 import type { NachAusfall } from '../../lib/plan';
+import { entwurfAusEinheit, inhaltAusEntwurf } from '../../lib/material';
 import { AufgabenInEinheit } from '../aufgaben/AufgabenInEinheit';
 import { TestsInEinheit } from '../tests/TestsInEinheit';
 import { formatLang, isoWoche } from '../../lib/dates';
@@ -95,6 +97,9 @@ export default function EinheitPage() {
   const spiele = useLiveQuery(() => db.spiele.toArray(), [], []) ?? [];
   const reihen = useLiveQuery(() => db.reihen.toArray(), [], []) ?? [];
 
+  const [entwurfWahl, setEntwurfWahl] = useState(false);
+  const [toast, zeigeToast] = useToast();
+  const entwuerfe = useLiveQuery(() => db.entwuerfe.toArray(), [], []) ?? [];
   const [ausfallOffen, setAusfallOffen] = useState(false);
   const [aktion, setAktion] = useState<NachAusfall>('nachruecken');
   const [grund, setGrund] = useState('Krankheit');
@@ -230,6 +235,28 @@ export default function EinheitPage() {
       <SpielAuswahl offen={spielWahl} onClose={() => setSpielWahl(false)} gewaehlt={e.spielIds} onChange={(ids) => set({ spielIds: ids })} />
       <ReiheAuswahl offen={reiheWahl} onClose={() => setReiheWahl(false)} gewaehlt={e.reiheIds} onChange={(ids) => set({ reiheIds: ids })} />
 
+      <div className="btn-row">
+        <Button small kind="secondary" onClick={() => setEntwurfWahl(true)}>Aus Entwurf übernehmen</Button>
+        <Button small kind="secondary" onClick={async () => {
+          const stufe = klasse && schuljahr ? stufeIm(klasse, schuljahr) : undefined;
+          await flush();
+          await db.entwuerfe.put(entwurfAusEinheit(e, stufe));
+          zeigeToast('Als Entwurf in der Bibliothek gespeichert');
+        }}>Als Entwurf speichern</Button>
+      </div>
+      <Sheet offen={entwurfWahl} onClose={() => setEntwurfWahl(false)} titel="Entwurf übernehmen">
+        <div className="muted small">Der Inhalt wird an die vorhandenen Texte dieser Einheit angehängt.</div>
+        {entwuerfe.length === 0 ? <Empty>Noch keine Entwürfe in der Bibliothek.</Empty> : (
+          <div className="list">
+            {entwuerfe.map((d) => (
+              <button key={d.id} className="row" style={{ width: '100%', textAlign: 'left' }} onClick={() => { set(inhaltAusEntwurf(e, d)); setEntwurfWahl(false); zeigeToast('Entwurf übernommen'); }}>
+                <div className="main"><div className="title">{d.titel || 'Ohne Titel'}</div><div className="sub">{d.klassenstufe ? `Klasse ${d.klassenstufe} · ` : ''}{d.hauptteil.slice(0, 60)}</div></div>
+              </button>
+            ))}
+          </div>
+        )}
+      </Sheet>
+
       <AufgabenInEinheit e={e} />
 
       <TestsInEinheit e={e} set={set} />
@@ -301,6 +328,7 @@ export default function EinheitPage() {
           <Button kind="secondary" onClick={() => setVertretungOffen(false)}>Abbrechen</Button>
         </div>
       </Sheet>
+      {toast}
     </Page>
   );
 }

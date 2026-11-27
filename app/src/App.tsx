@@ -1,6 +1,8 @@
 import TagPage from './features/arbeitszeit/TagPage';
 import ArbeitszeitPage from './features/arbeitszeit/ArbeitszeitPage';
 import StatistikPage from './features/arbeitszeit/StatistikPage';
+import EntwurfPage from './features/bibliothek/EntwurfPage';
+import MaterialPage from './features/material/MaterialPage';
 import AufgabenPage from './features/aufgaben/AufgabenPage';
 import FaecherPage from './features/mehr/FaecherPage';
 import { HashRouter, NavLink, Route, Routes } from 'react-router-dom';
@@ -60,6 +62,8 @@ export default function App() {
           <Route path="/tag/:datum" element={<TagPage />} />
           <Route path="/arbeitszeit" element={<ArbeitszeitPage />} />
           <Route path="/arbeitszeit/statistik" element={<StatistikPage />} />
+          <Route path="/entwurf/:id" element={<EntwurfPage />} />
+          <Route path="/material" element={<MaterialPage />} />
           <Route path="/aufgaben" element={<AufgabenPage />} />
           <Route path="/faecher" element={<FaecherPage />} />
           <Route path="/schuljahr" element={<SchuljahrPage />} />

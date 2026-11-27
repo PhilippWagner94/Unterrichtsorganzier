@@ -20,9 +20,13 @@ export interface AufgabeVorgabe {
 /** Anlegen oder Bearbeiten einer Aufgabe bzw. Verpflichtung. */
 export function AufgabeSheet({ offen, onClose, aufgabe, vorgabe }: { offen: boolean; onClose: () => void; aufgabe?: Aufgabe; vorgabe?: AufgabeVorgabe }) {
   const [a, setA] = useState<Aufgabe>();
+  const [kopieTage, setKopieTage] = useState<number[]>([]);
+  const [kopieDatum, setKopieDatum] = useState('');
+  const [kopiert, setKopiert] = useState('');
 
   useEffect(() => {
     if (!offen) return;
+    setKopieTage([]); setKopieDatum(''); setKopiert('');
     if (aufgabe) setA(aufgabe);
     else {
       const v = vorgabe ?? { typ: 'aufgabe' as const };
@@ -39,6 +43,22 @@ export function AufgabeSheet({ offen, onClose, aufgabe, vorgabe }: { offen: bool
   const set = (p: Partial<Aufgabe>) => setA({ ...a, ...p });
   const verpf = a.typ === 'verpflichtung';
   const wdh = a.wiederholung ?? 'einmalig';
+
+  async function kopieren() {
+    if (!aufgabe) return;
+    const basis = { ...a!, id: '', erledigt: false, erledigtAm: undefined, erstellt: Date.now() };
+    const neue: Aufgabe[] = [];
+    if (wdh === 'einmalig') {
+      if (kopieDatum) neue.push({ ...basis, id: neueId(), faellig: kopieDatum });
+    } else {
+      for (const t of kopieTage) neue.push({ ...basis, id: neueId(), wochentag: t });
+    }
+    if (!neue.length) return;
+    await db.aufgaben.bulkAdd(neue);
+    setKopiert(`${neue.length} Kopie(n) angelegt.`);
+    setKopieTage([]);
+    setKopieDatum('');
+  }
 
   async function speichern() {
     if (!a) return;
@@ -90,6 +110,25 @@ export function AufgabeSheet({ offen, onClose, aufgabe, vorgabe }: { offen: bool
           <TextField label="Ort" value={a.ort ?? ''} onChange={(v) => set({ ort: v })} />
         </>
       )}
+      {aufgabe && verpf ? (
+        <details>
+          <summary className="small">Auf andere Tage kopieren</summary>
+          {wdh === 'einmalig' ? (
+            <TextField label="Kopie an diesem Datum anlegen" type="date" value={kopieDatum} onChange={setKopieDatum} />
+          ) : (
+            <>
+              <div className="muted small">Gleiche Aufsicht (Uhrzeit, Ort, Rhythmus) zusätzlich an diesen Wochentagen:</div>
+              <div className="chips">
+                {TAGE.filter((t) => t.value !== aufgabe.wochentag).map((t) => (
+                  <button key={t.value} className={`chip-btn ${kopieTage.includes(t.value) ? 'on' : ''}`} onClick={() => setKopieTage(kopieTage.includes(t.value) ? kopieTage.filter((x) => x !== t.value) : [...kopieTage, t.value])}>{t.label}</button>
+                ))}
+              </div>
+            </>
+          )}
+          <Button small kind="secondary" onClick={kopieren} disabled={wdh === 'einmalig' ? !kopieDatum : kopieTage.length === 0}>Kopien anlegen</Button>
+          {kopiert ? <div className="muted small">{kopiert} Die Kopien findest du in der Liste und kannst sie einzeln anpassen.</div> : null}
+        </details>
+      ) : null}
       <div className="btn-row">
         <Button onClick={speichern}>Speichern</Button>
         <Button kind="secondary" onClick={onClose}>Abbrechen</Button>

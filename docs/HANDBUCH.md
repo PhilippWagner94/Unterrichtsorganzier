@@ -72,6 +72,7 @@ Allgemeine Bedienung:
 - **Grobfahrplan vorschlagen:** Ein Vorschlag für die Reihenfolge der Lernbereiche über das Jahr (draußen im Herbst und Frühjahr, Turnen und Gymnastik im Winter, Puffer). Alles bleibt änderbar. Das ist ein eigener Vorschlag, keine Lehrplanvorgabe.
 - **Blöcke** hinzufügen, löschen, Anzahl ändern, mit ▲▼ umsortieren. Zu jedem Block siehst du den Zeitraum.
 - Die Zeitrichtwerte des Lehrplans (Stunden je Lernbereich und Klassenstufe) werden mit der aktuellen Planung verglichen.
+- **Aus früherer Planung übernehmen:** Im neuen Schuljahr oder bei einer neuen Klasse im Jahresplan „Inhalte aus früherer Planung übernehmen". Du wählst die Quelle (z. B. „Klasse 3a · 2025/26"). Die Inhalte (Aufwärmen, Hauptteil, Spiele, Material …) wandern je Lernbereich der Reihe nach in die noch leeren Einheiten. Befüllte Einheiten bleiben unverändert. Reflexion und Notizen des Vorjahres erscheinen als Hinweis „Vorjahr: …" in den Notizen.
 - **Lernziele:** Mehr → Lehrplan und Lernziele. Dort Lernbereiche, Richtwerte und Lernziele ansehen und bearbeiten.
 
 **Einheit (Antippen im Kalender, auf Heute oder im Plan):**
@@ -80,6 +81,7 @@ Allgemeine Bedienung:
 - **Datum ändern:** Einheit verlegen (z. B. Zusatzstunde auf eine andere Woche). Der Plan verteilt sich neu.
 - **Beginn und Ende** der Stunde (leer = wie bei der Klasse eingestellt)
 - **Vorbereitung für diese Stunde:** Aufgaben anlegen
+- **Als Entwurf speichern / Aus Entwurf übernehmen:** Den Inhalt einer Stunde (ohne Klasse, Datum, Notizen) in der Bibliothek unter „Entwürfe" ablegen und später bei einer anderen Klasse oder im nächsten Schuljahr wieder einfügen. Vorhandene Texte bleiben, der Entwurf wird angehängt.
 - **Tests und Noten in dieser Einheit:** siehe Abschnitt 9
 - Nachbereitung: Reflexion, Notizen
 - **Fixieren:** Der Inhalt bleibt an diesem Termin, auch wenn der Plan sich verschiebt.
@@ -102,6 +104,7 @@ Bei **Vertretung** (jemand anderes hält die Stunde) kannst du eine Notiz hinter
 
 ## 8. Bibliothek: Spiele, Reihen, Notizen
 
+- **Entwürfe:** Wiederverwendbare Stundenentwürfe (Titel, Klassenstufe, Lernbereich, Aufwärmen, Hauptteil, Ausklang, Material, Wetteralternative).
 - **Spiele:** Eigene Spiele eintragen mit Titel, Beschreibung, Material, Ort (Halle/draußen), Lernbereich, Favorit und **Quelle** (z. B. Buchtitel „Kleine Spiele"). Eine kleine Startsammlung (in eigenen Worten) kannst du laden.
 - **Methodische Reihen:** Schrittfolgen zu einer Technik (z. B. Weitsprung) mit Sicherheitshinweisen und Quelle.
 - **Notizen:** Freie Notizen, auch mit Bildern.
@@ -131,6 +134,7 @@ Mehr → Wettkampftermine: Einzelne Termine mit Name, Datum, Ort, Notizen, betro
 Mehr → Aufgaben und Verpflichtungen (und Karte auf Heute):
 - **Aufgaben:** Was ist zu tun, bis wann, Kategorie (Vorbereitung, Verwaltung, Elternkontakt, Sonstiges), mit Häkchen erledigen.
 - **Verpflichtungen:** Pausenaufsicht Hof, Aufsicht Mittagspause, Frühaufsicht, Dienstberatung, Elterngespräch, Sonstiges. Einmalig, jede Woche oder alle 2 Wochen (gerade/ungerade KW), mit Uhrzeit und Ort. Wiederkehrende Verpflichtungen entfallen in Ferien und an freien Tagen.
+- **Aufsicht auf andere Tage kopieren:** Eine bestehende Verpflichtung öffnen, „Auf andere Tage kopieren" aufklappen, Wochentage wählen und „Kopien anlegen". Jede Kopie ist eigenständig änderbar. Bei einmaligen Terminen wählst du stattdessen ein Datum.
 - Die Übersicht zeigt 3 Tage, 1 oder 2 Wochen mit Unterricht, Verpflichtungen und Aufgaben, dazu „Überfällig", „Ohne Datum", „Später".
 - **Vorbereitung für eine Stunde:** In der Einheit oder in der Übersicht („＋ Vorbereitung") anlegen. Standard-Fälligkeit ist der Vortag.
 
@@ -167,6 +171,14 @@ Mehr → Foto importieren (oder „Aus Foto" in einer Klasse):
 - Die App erinnert auf „Heute", wenn das letzte Backup älter als 30 Tage ist.
 - **Empfehlung:** Mindestens alle 2 bis 4 Wochen und vor jedem Handywechsel sichern.
 - iOS kann Browserdaten bei langer Nichtnutzung löschen. Die App bittet um dauerhaften Speicher, garantiert werden kann er nicht. Das Backup ist die eigentliche Absicherung.
+
+**Material teilen ohne Personendaten (Mehr → Material teilen):**
+- Exportiert nur Unterrichtsmaterial: Spiele, methodische Reihen, Stundenentwürfe, Tests (nur Beschreibung und Bewertungstabelle), optional Bilder und Notizen.
+- Mit „Inhalte meiner Unterrichtseinheiten als Entwürfe" werden deine gehaltenen und geplanten Einheiten mit Inhalt als Entwürfe exportiert, ohne Klasse, Datum, Notizen, Reflexion und Vertretungsnotizen.
+- Nie enthalten: Klassen, Kinder, Geburtstage, Noten, Testergebnisse, Wettkampfteilnehmer, Arbeitszeiten, Aufgaben.
+- Notizen sind standardmäßig aus, weil sie Persönliches enthalten können.
+- **Importieren:** Datei wählen. Es werden nur neue Einträge hinzugefügt, Vorhandenes bleibt unverändert. Ein zweiter Import derselben Datei erzeugt keine Doppelten.
+- Das ist etwas anderes als das Backup: Das Backup enthält alle Daten und dient nur der eigenen Sicherung.
 
 ## 15. Fächer
 

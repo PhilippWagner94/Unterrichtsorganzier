@@ -378,3 +378,17 @@ describe('Zeiten und Arbeitszeit', () => {
     expect(perioden(l, 'schuljahr', '2026-11-27')).toHaveLength(1);
   });
 });
+
+import { planeUebernahme } from './uebernahme';
+describe('Übernahme aus dem Vorjahr', () => {
+  const e = (id: string, datum: string, lb: string, extra: object = {}) => ({ ...leereEinheit('k', 's', datum), id, lernbereichId: lb, ...extra }) as never;
+  it('ordnet je Lernbereich der Reihe nach zu und lässt Belegtes in Ruhe', () => {
+    const quelle = [e('q1', '2025-09-01', 'la', { hauptteil: 'Sprint', reflexion: 'zu eng' }), e('q2', '2025-09-08', 'la', { hauptteil: 'Weitsprung' }), e('q3', '2025-10-01', 'tu', { hauptteil: 'Rolle' }), e('q4', '2025-10-08', 'tu')];
+    const ziel = [e('z1', '2026-09-01', 'la'), e('z2', '2026-09-08', 'la', { hauptteil: 'schon da' }), e('z3', '2026-10-01', 'tu')];
+    const m = planeUebernahme(quelle, ziel);
+    expect(m.get('z1')?.hauptteil).toBe('Sprint');
+    expect(m.get('z1')?.notizen).toContain('Vorjahr: zu eng');
+    expect(m.has('z2')).toBe(false);
+    expect(m.get('z3')?.hauptteil).toBe('Rolle');
+  });
+});

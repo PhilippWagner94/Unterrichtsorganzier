@@ -30,7 +30,7 @@ function base64ZuBlob(b64: string, mime: string): Blob {
   return new Blob([bytes], { type: mime });
 }
 
-async function zeileZuJson(zeile: Record<string, unknown>): Promise<Record<string, unknown>> {
+export async function zeileZuJson(zeile: Record<string, unknown>): Promise<Record<string, unknown>> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(zeile)) {
     if (v instanceof Blob) {
@@ -42,7 +42,7 @@ async function zeileZuJson(zeile: Record<string, unknown>): Promise<Record<strin
   return out;
 }
 
-function zeileAusJson(zeile: Record<string, unknown>): Record<string, unknown> {
+export function zeileAusJson(zeile: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(zeile)) {
     out[k] = istBlobJson(v) ? base64ZuBlob(v.data, v.mime) : v;
@@ -166,4 +166,27 @@ export async function persistenterSpeicher(): Promise<boolean> {
     /* ignorieren */
   }
   return false;
+}
+
+/** Gibt eine Textdatei über das Teilen-Menü (iPhone) oder als Download aus. */
+export async function speichereTextdatei(text: string, name: string, titel: string): Promise<'geteilt' | 'heruntergeladen' | 'abgebrochen'> {
+  const datei = new File([text], name, { type: 'application/json' });
+  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+  if (nav.share && nav.canShare?.({ files: [datei] })) {
+    try {
+      await nav.share({ files: [datei], title: titel });
+      return 'geteilt';
+    } catch (e) {
+      if ((e as DOMException).name === 'AbortError') return 'abgebrochen';
+    }
+  }
+  const url = URL.createObjectURL(datei);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  return 'heruntergeladen';
 }

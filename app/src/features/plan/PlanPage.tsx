@@ -8,6 +8,7 @@ import { Balken, Button, Card, Chip, Empty, List, Page, Row, Section, SelectFiel
 import { fehlendeEinheiten, veralteteEinheiten, offenePuffer, verteile, zaehleUstd } from '../../lib/plan';
 import { planNeuVerteilen } from '../../lib/planAktionen';
 import { formatKurz, formatLang } from '../../lib/dates';
+import { planeUebernahme } from '../../lib/uebernahme';
 import { grobplanFuer } from '../../data/grobplan';
 
 const STATUS_LABEL: Record<Einheit['status'], string> = {
@@ -34,6 +35,29 @@ export default function PlanPage() {
     [klasseId, sjId],
     [] as Einheit[],
   ) ?? [];
+  const [vorjahrOffen, setVorjahrOffen] = useState(false);
+  const alleEinheiten = useLiveQuery(() => db.einheiten.toArray(), [], []) ?? [];
+  const alleKlassen = useLiveQuery(() => db.klassen.toArray(), [], []) ?? [];
+  const alleSchuljahre = useLiveQuery(() => db.schuljahre.toArray(), [], []) ?? [];
+  const quellen = (() => {
+    const m = new Map<string, Einheit[]>();
+    for (const e of alleEinheiten) {
+      if (!sj || (e.klasseId === klasseId && e.schuljahrId === sj.id)) continue;
+      if (!(e.titel || e.aufwaermen || e.hauptteil || e.ausklang || e.material || e.spielIds.length || e.reiheIds.length)) continue;
+      const k = `${e.klasseId}|${e.schuljahrId}`;
+      m.set(k, [...(m.get(k) ?? []), e]);
+    }
+    return [...m.entries()].map(([k, l]) => {
+      const [kid, sid] = k.split('|');
+      return { key: k, einheiten: l, label: `Klasse ${alleKlassen.find((x) => x.id === kid)?.name ?? '?'} · ${alleSchuljahre.find((x) => x.id === sid)?.name ?? '?'} (${l.length} Einheiten mit Inhalt)` };
+    }).sort((a, b) => b.label.localeCompare(a.label));
+  })();
+  async function uebernehmen(quelle: Einheit[]) {
+    const plan = planeUebernahme(quelle, einheiten);
+    for (const [id, patch] of plan) await db.einheiten.update(id, patch);
+    setVorjahrOffen(false);
+    zeigeToast(plan.size ? `${plan.size} Einheiten befüllt` : 'Nichts übernommen (keine passenden leeren Einheiten im gleichen Lernbereich)');
+  }
   const [neu, setNeu] = useState(false);
   const [neuLb, setNeuLb] = useState('puffer');
   const [neuAnzahl, setNeuAnzahl] = useState(4);
@@ -185,6 +209,12 @@ export default function PlanPage() {
             <Button small onClick={grobplanAnwenden}>Grobfahrplan vorschlagen</Button>
           </Card>
         ) : null}
+        {einheiten.length > 0 && quellen.length > 0 ? (
+          <Card kind="soft">
+            <div className="small">Frühere Planungen wiederverwenden: Inhalte (Aufwärmen, Hauptteil, Spiele …) aus einem früheren Schuljahr oder einer anderen Klasse übernehmen. Es werden nur leere Einheiten im selben Lernbereich befüllt.</div>
+            <Button small onClick={() => setVorjahrOffen(true)}>Inhalte aus früherer Planung übernehmen</Button>
+          </Card>
+        ) : null}
         {bloecke.length === 0 ? (
           <Empty>Noch keine Blöcke. Lege Lernbereiche in der gewünschten Reihenfolge an, z. B. Leichtathletik 6, Turnen 5, Puffer 2 …</Empty>
         ) : (
@@ -285,6 +315,17 @@ export default function PlanPage() {
           🎯 Lernziele dieser Klasse
         </Link>
       </div>
+
+      <Sheet offen={vorjahrOffen} onClose={() => setVorjahrOffen(false)} titel="Aus früherer Planung übernehmen">
+        <div className="muted small">Quelle wählen. Bereits befüllte Einheiten bleiben unverändert.</div>
+        <div className="list">
+          {quellen.map((q) => (
+            <button key={q.key} className="row" style={{ width: '100%', textAlign: 'left' }} onClick={() => uebernehmen(q.einheiten)}>
+              <div className="main"><div className="title">{q.label}</div></div>
+            </button>
+          ))}
+        </div>
+      </Sheet>
 
       <Sheet offen={neu} onClose={() => setNeu(false)} titel="Block hinzufügen">
         <SelectField label="Lernbereich" value={neuLb} onChange={(v) => { setNeuLb(v); setNeuAnzahl(v === 'puffer' ? 1 : 4); }} options={optionen} />

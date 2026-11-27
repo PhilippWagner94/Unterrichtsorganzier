@@ -60,6 +60,11 @@ export default function MehrPage() {
         <Row title="🎯 Lehrplan und Lernziele" sub="Lernbereiche, Richtwerte, Lernziele bearbeiten" to="/lernziele" />
       </List>
 
+      <Section title="Teilen" />
+      <List>
+        <Row title="📤 Material teilen (ohne Personendaten)" sub="Spiele, Methodik, Stundenentwürfe, Tests exportieren und importieren" to="/material" />
+      </List>
+
       <Section title="Daten sichern" />
       <Card>
         <div>

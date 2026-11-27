@@ -299,3 +299,21 @@ export interface ZeitGruppe {
   name: string;
   kategorieIds: ID[];
 }
+
+/** Wiederverwendbarer Stundenentwurf (ohne Klasse, Datum und persönliche Notizen). */
+export interface Entwurf {
+  id: ID;
+  titel: string;
+  klassenstufe?: number;
+  lernbereichId?: ID;
+  zielIds: ID[];
+  spielIds: ID[];
+  reiheIds: ID[];
+  aufwaermen: string;
+  hauptteil: string;
+  ausklang: string;
+  material: string;
+  ort?: Ort;
+  wetterAlternative: string;
+  erstellt: number;
+}

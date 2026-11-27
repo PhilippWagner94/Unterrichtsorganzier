@@ -8,10 +8,11 @@ import { alleTags, filterSpiele } from './filter';
 import { ladeStartsammlung } from './startsammlung';
 import { formatDatum } from '../../lib/dates';
 
-type Tab = 'spiele' | 'methodik' | 'notizen';
+type Tab = 'spiele' | 'methodik' | 'entwuerfe' | 'notizen';
 const TABS: { value: Tab; label: string }[] = [
   { value: 'spiele', label: 'Spiele' },
   { value: 'methodik', label: 'Methodik' },
+  { value: 'entwuerfe', label: 'Entwürfe' },
   { value: 'notizen', label: 'Notizen' },
 ];
 const ORT_LABEL: Record<Ort, string> = { halle: 'Halle', draussen: 'Draußen', beides: 'Halle/Draußen' };
@@ -27,6 +28,7 @@ export default function BibliothekPage() {
 
   const spiele = useLiveQuery(() => db.spiele.toArray(), [], []) ?? [];
   const reihen = useLiveQuery(() => db.reihen.toArray(), [], []) ?? [];
+  const entwuerfe = useLiveQuery(() => db.entwuerfe.toArray(), [], []) ?? [];
   const notizen = useLiveQuery(() => db.notizen.toArray(), [], []) ?? [];
   const lernbereiche = useLiveQuery(() => db.lernbereiche.toArray(), [], []) ?? [];
   const zuletzt = useLiveQuery(async () => {
@@ -57,8 +59,14 @@ export default function BibliothekPage() {
     nav(`/notiz/${id}`);
   }
 
+  async function neuerEntwurf() {
+    const id = neueId();
+    await db.entwuerfe.add({ id, titel: 'Neuer Entwurf', zielIds: [], spielIds: [], reiheIds: [], aufwaermen: '', hauptteil: '', ausklang: '', material: '', wetterAlternative: '', erstellt: Date.now() });
+    nav(`/entwurf/${id}`);
+  }
+
   const aktion =
-    tab === 'spiele' ? <button onClick={neuesSpiel}>＋ Spiel</button> : tab === 'methodik' ? <button onClick={neueReihe}>＋ Reihe</button> : <button onClick={neueNotiz}>＋ Notiz</button>;
+    tab === 'spiele' ? <button onClick={neuesSpiel}>＋ Spiel</button> : tab === 'methodik' ? <button onClick={neueReihe}>＋ Reihe</button> : tab === 'entwuerfe' ? <button onClick={neuerEntwurf}>＋ Entwurf</button> : <button onClick={neueNotiz}>＋ Notiz</button>;
 
   return (
     <Page title="Bibliothek" aktion={aktion}>
@@ -111,6 +119,16 @@ export default function BibliothekPage() {
           <List>
             {[...reihen].sort((a, b) => a.thema.localeCompare(b.thema, 'de')).map((r) => (
               <Row key={r.id} title={r.thema} sub={`${r.schritte.length} Schritte${r.lernbereichId ? ' · ' + (lernbereiche.find((l) => l.id === r.lernbereichId)?.kuerzel ?? '') : ''}`} to={`/reihe/${r.id}`} />
+            ))}
+          </List>
+        )
+      ) : null}
+
+      {tab === 'entwuerfe' ? (
+        entwuerfe.length === 0 ? <Empty>Noch keine Entwürfe. In einer Einheit kannst du den Stundeninhalt „Als Entwurf speichern“, um ihn in einem späteren Jahr oder bei einer anderen Klasse wiederzuverwenden.</Empty> : (
+          <List>
+            {[...entwuerfe].sort((a, b) => a.titel.localeCompare(b.titel, 'de')).map((d) => (
+              <Row key={d.id} title={d.titel || 'Ohne Titel'} sub={[d.klassenstufe ? `Klasse ${d.klassenstufe}` : '', lernbereiche.find((l) => l.id === d.lernbereichId)?.kuerzel ?? '', d.hauptteil.slice(0, 50)].filter(Boolean).join(' · ')} to={`/entwurf/${d.id}`} />
             ))}
           </List>
         )
