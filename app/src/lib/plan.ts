@@ -1,6 +1,6 @@
 import type { Datum, Einheit, FreierTag, Klasse, PlanBlock, Schuljahr } from '../db/types';
 import { neueId } from '../db/db';
-import { addTage, fromYmd, wochenStart, tageZwischen, wochentag } from './dates';
+import { addTage, fromYmd, isoWoche, tageZwischen, wochenStart, wochentag } from './dates';
 import { feiertageImZeitraum } from './feiertage';
 
 /** Ist das Datum frei (Ferien, freier Tag, gesetzlicher Feiertag)? Gibt die Bezeichnung zurück. */
@@ -11,20 +11,29 @@ export function freiBezeichnung(datum: Datum, freieTage: FreierTag[]): string | 
   return fe[0]?.name;
 }
 
-/** Alle regulären Unterrichtstermine einer Klasse in einem Schuljahr, ohne Ferien und freie Tage. */
-export function terminSlots(klasse: Klasse, schuljahr: Schuljahr, freieTage: FreierTag[]): Datum[] {
-  const slots: Datum[] = [];
-  const erstWoche = wochenStart(schuljahr.start);
+export interface Slot {
+  datum: Datum;
+  zusatz: boolean;
+}
+
+/** Alle regulären Termine einer Klasse (Haupt- und Zusatzstunde) in einem Schuljahr, ohne Ferien und freie Tage. */
+export function terminSlotsMitArt(klasse: Klasse, schuljahr: Schuljahr, freieTage: FreierTag[]): Slot[] {
+  const slots: Slot[] = [];
+  const paritaet = (klasse.zusatzWoche ?? 'ungerade') === 'gerade' ? 0 : 1;
   for (let d = schuljahr.start; d <= schuljahr.ende; d = addTage(d, 1)) {
     const wt = wochentag(d);
-    const wochenIndex = Math.floor(tageZwischen(erstWoche, wochenStart(d)) / 7);
-    const hauptTag = wt === klasse.wochentag;
-    const zusatzTag = klasse.zusatzAktiv && wt === klasse.zusatzWochentag && wochenIndex % 2 === 1;
-    if (!hauptTag && !zusatzTag) continue;
+    const haupt = wt === klasse.wochentag;
+    const zusatz = klasse.zusatzAktiv && wt === klasse.zusatzWochentag && isoWoche(d) % 2 === paritaet;
+    if (!haupt && !zusatz) continue;
     if (freiBezeichnung(d, freieTage)) continue;
-    slots.push(d);
+    // Fallen beide Tage zusammen, zählt nur ein Termin
+    slots.push({ datum: d, zusatz: !haupt });
   }
   return slots;
+}
+
+export function terminSlots(klasse: Klasse, schuljahr: Schuljahr, freieTage: FreierTag[]): Datum[] {
+  return terminSlotsMitArt(klasse, schuljahr, freieTage).map((s) => s.datum);
 }
 
 export function leereEinheit(klasseId: string, schuljahrId: string, datum: Datum): Einheit {
@@ -55,17 +64,41 @@ export function leereEinheit(klasseId: string, schuljahrId: string, datum: Datum
   };
 }
 
-/** Neue Einheiten für alle Termine, für die es noch keine Einheit gibt. */
+/** Hat die Einheit Inhalt, den man nicht stillschweigend löschen darf? */
+export function hatInhalt(e: Einheit): boolean {
+  return !!(e.fixiert || e.titel || e.aufwaermen || e.hauptteil || e.ausklang || e.material || e.notizen || e.reflexion ||
+    e.vertretungsnotiz || e.spielIds.length || e.reiheIds.length || e.zielIds.length);
+}
+
+/** Neue Einheiten für alle Termine, für die es noch keine Einheit gibt (verlegte Einheiten blockieren ihren Ursprungstermin). */
 export function fehlendeEinheiten(
   klasse: Klasse,
   schuljahr: Schuljahr,
   freieTage: FreierTag[],
   vorhandene: Einheit[],
 ): Einheit[] {
-  const vorhandeneDaten = new Set(vorhandene.map((e) => e.datum));
-  return terminSlots(klasse, schuljahr, freieTage)
-    .filter((d) => !vorhandeneDaten.has(d))
-    .map((d) => leereEinheit(klasse.id, schuljahr.id, d));
+  const belegt = new Set<string>();
+  for (const e of vorhandene) {
+    belegt.add(e.datum);
+    if (e.sollDatum) belegt.add(e.sollDatum);
+  }
+  return terminSlotsMitArt(klasse, schuljahr, freieTage)
+    .filter((s) => !belegt.has(s.datum))
+    .map((s) => ({ ...leereEinheit(klasse.id, schuljahr.id, s.datum), zusatz: s.zusatz }));
+}
+
+/**
+ * Einheiten, die nach einer Änderung des Rhythmus (Wochentag, Zusatzstunde, gerade/ungerade) nicht mehr
+ * zu einem Regeltermin passen und gefahrlos entfernt werden können: geplant, nicht verlegt, ohne Inhalt.
+ */
+export function veralteteEinheiten(
+  klasse: Klasse,
+  schuljahr: Schuljahr,
+  freieTage: FreierTag[],
+  vorhandene: Einheit[],
+): Einheit[] {
+  const gueltig = new Set(terminSlots(klasse, schuljahr, freieTage));
+  return vorhandene.filter((e) => e.status === 'geplant' && !e.sollDatum && !gueltig.has(e.datum) && !hatInhalt(e) && e.zusatz !== undefined);
 }
 
 export interface SequenzEintrag {

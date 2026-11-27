@@ -3,7 +3,7 @@ import { addTage, formatLang, istGueltig, tageZwischen, wochentag } from './date
 import { klassenstufe, klassenstufeAm, schuljahrStartjahr, istAktiv } from './schuljahr';
 import { geburtstageZwischen, geburtstagImJahr } from './geburtstage';
 import { bussUndBettag, feiertageSachsen, ostersonntag } from './feiertage';
-import { bloeckeNachAusfall, leereEinheit, sequenz, terminSlots, verteile, zaehleUstd } from './plan';
+import { bloeckeNachAusfall, leereEinheit, sequenz, terminSlots, terminSlotsMitArt, verteile, zaehleUstd } from './plan';
 import { bestleistung, durchschnitt, noteFuerWert } from './noten';
 import type { Einheit, FreierTag, Klasse, PlanBlock, Schueler, Schuljahr, Test } from '../db/types';
 
@@ -260,5 +260,38 @@ describe('Noten', () => {
     ];
     expect(bestleistung({ richtung: 'min' }, erg)?.wert).toBe(9.8);
     expect(bestleistung({ richtung: 'max' }, erg)?.wert).toBe(10.2);
+  });
+});
+
+import { isoWoche } from './dates';
+import { grobplanFuer } from '../data/grobplan';
+describe('Zusatzstunde, KW und Grobplan', () => {
+  it('berechnet ISO-Kalenderwochen', () => {
+    expect(isoWoche('2026-01-01')).toBe(1);
+    expect(isoWoche('2026-10-05')).toBe(41);
+    expect(isoWoche('2026-12-31')).toBe(53);
+    expect(isoWoche('2027-01-03')).toBe(53);
+    expect(isoWoche('2027-01-04')).toBe(1);
+  });
+  it('Zusatzstunde liegt nur in der gewählten KW-Parität', () => {
+    const klasse = { id: 'k', name: '3a', einschulungsjahr: 2024, wochentag: 1, zusatzAktiv: true, zusatzWochentag: 3, zusatzWoche: 'ungerade', archiviert: false } as never;
+    const sj = { id: 's', name: '2026/27', start: '2026-10-05', ende: '2026-10-25' } as never;
+    const mit = terminSlotsMitArt(klasse, sj, []);
+    const z = mit.filter((s) => s.zusatz).map((s) => s.datum);
+    expect(z).toEqual(['2026-10-07', '2026-10-21']); // KW 41 und 43
+    const g = terminSlotsMitArt({ ...(klasse as object), zusatzWoche: 'gerade' } as never, sj, []).filter((s) => s.zusatz).map((s) => s.datum);
+    expect(g).toEqual(['2026-10-14']); // KW 42
+  });
+  it('Grobplan hat genau so viele Einheiten wie Termine', () => {
+    for (const st of [1, 2, 3, 4]) for (const n of [25, 31, 34]) expect(grobplanFuer(st, n).reduce((a, b) => a + b.anzahl, 0)).toBe(n);
+  });
+});
+
+import { schuelerAusFreitext, parseSchuelerZeilen } from './schuelerImport';
+describe('Kinderliste aus Foto-Text', () => {
+  it('erkennt verschiedene Schreibweisen', () => {
+    const t = schuelerAusFreitext('1. Anna Müller 12.03.2018 w\n2) Schmidt, Paul  5.7.2017  m\nLena Weiß 01 . 02 . 2018');
+    expect(t.split('\n')).toEqual(['Anna; Müller; 12.03.2018; w', 'Paul; Schmidt; 05.07.2017; m', 'Lena; Weiß; 01.02.2018']);
+    expect(parseSchuelerZeilen(t).ok).toHaveLength(3);
   });
 });

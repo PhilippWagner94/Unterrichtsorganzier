@@ -5,9 +5,10 @@ import { db, neueId } from '../../db/db';
 import { stufeIm, useAktivesSchuljahr } from '../../db/hooks';
 import type { Einheit, PlanBlock } from '../../db/types';
 import { Balken, Button, Card, Chip, Empty, List, Page, Row, Section, SelectField, Sheet, useToast, bestaetige } from '../../components/ui';
-import { fehlendeEinheiten, offenePuffer, verteile, zaehleUstd } from '../../lib/plan';
+import { fehlendeEinheiten, veralteteEinheiten, offenePuffer, verteile, zaehleUstd } from '../../lib/plan';
 import { planNeuVerteilen } from '../../lib/planAktionen';
 import { formatKurz, formatLang } from '../../lib/dates';
+import { grobplanFuer } from '../../data/grobplan';
 
 const STATUS_LABEL: Record<Einheit['status'], string> = {
   geplant: 'geplant',
@@ -62,6 +63,31 @@ export default function PlanPage() {
     if (neue.length) await db.einheiten.bulkAdd(neue);
     await planNeuVerteilen(klasse.id, sj.id);
     zeigeToast(neue.length ? `${neue.length} Termine angelegt` : 'Keine neuen Termine nötig');
+  }
+
+  async function termineAbgleichen() {
+    if (!klasse || !sj) return;
+    const freie = await db.freieTage.where('schuljahrId').equals(sj.id).toArray();
+    const alt = veralteteEinheiten(klasse, sj, freie, einheiten);
+    if (alt.length) await db.einheiten.bulkDelete(alt.map((e) => e.id));
+    const neue = fehlendeEinheiten(klasse, sj, freie, einheiten.filter((e) => !alt.includes(e)));
+    if (neue.length) await db.einheiten.bulkAdd(neue);
+    await planNeuVerteilen(klasse.id, sj.id);
+    zeigeToast(`${neue.length} Termine ergänzt, ${alt.length} veraltete entfernt`);
+  }
+
+  async function grobplanAnwenden() {
+    if (!klasse || !sj || !stufe) return;
+    if (bloecke.length && !bestaetige('Die bestehende Reihenfolge wird durch den Vorschlag ersetzt. Fortfahren?')) return;
+    const lbIds = new Set(lernbereiche.map((l) => l.id));
+    await db.planBloecke.where('[klasseId+schuljahrId]').equals([klasse.id, sj.id]).delete();
+    const vorschlag = grobplanFuer(stufe, einheiten.filter((e) => e.status !== 'ausfall').length || 25)
+      .filter((b) => b.lernbereichId === null || lbIds.has(b.lernbereichId));
+    await db.planBloecke.bulkAdd(
+      vorschlag.map((b, i) => ({ id: neueId(), klasseId: klasse.id, schuljahrId: sj.id, lernbereichId: b.lernbereichId, titel: b.hinweis, anzahl: b.anzahl, sortierung: i + 1 })),
+    );
+    await planNeuVerteilen(klasse.id, sj.id);
+    zeigeToast('Vorschlag übernommen, du kannst alles ändern');
   }
 
   async function neuVerteilen() {
@@ -146,13 +172,19 @@ export default function PlanPage() {
             </div>
           ) : null}
           <div className="btn-row">
-            <Button small kind="secondary" onClick={termineErzeugen}>Termine ergänzen</Button>
+            <Button small kind="secondary" onClick={termineAbgleichen}>Termine abgleichen</Button>
             <Button small kind="secondary" onClick={neuVerteilen}>Plan neu verteilen</Button>
           </div>
         </Card>
       )}
 
       <Section title="Reihenfolge der Lernbereiche" aktion={<Button small onClick={() => setNeu(true)}>＋ Block</Button>}>
+        {einheiten.length > 0 ? (
+          <Card kind="soft">
+            <div className="small">Grobfahrplan für Klasse {stufe ?? ''}: ein Vorschlag, welcher Lernbereich wann dran ist (Draußen im Herbst und Frühjahr, Turnen und Gymnastik im Winter). Alles bleibt änderbar.</div>
+            <Button small onClick={grobplanAnwenden}>Grobfahrplan vorschlagen</Button>
+          </Card>
+        ) : null}
         {bloecke.length === 0 ? (
           <Empty>Noch keine Blöcke. Lege Lernbereiche in der gewünschten Reihenfolge an, z. B. Leichtathletik 6, Turnen 5, Puffer 2 …</Empty>
         ) : (
@@ -174,7 +206,7 @@ export default function PlanPage() {
                       {lb ? lb.name : 'Pufferstunden'}
                     </div>
                     <div className="sub">
-                      {von ? `${formatKurz(von)} – ${formatKurz(bis!)}` : 'noch ohne Termin'}
+                      {von ? `${formatKurz(von)} – ${formatKurz(bis!)}` : 'noch ohne Termin'}{b.titel ? ` · ${b.titel}` : ''}
                     </div>
                     <div className="btn-row">
                       <Button small kind="secondary" onClick={() => anzahlAendern(b, -1)}>−</Button>

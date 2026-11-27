@@ -58,6 +58,7 @@ export interface Klasse {
   wochentag: number; // 1 = Montag ... 5 = Freitag; Doppelstunde jede Woche
   zusatzAktiv: boolean; // zusätzliche Doppelstunde alle 2 Wochen
   zusatzWochentag: number;
+  zusatzWoche?: 'gerade' | 'ungerade'; // in welchen Kalenderwochen (ISO) die Zusatzstunde liegt; Standard ungerade
   archiviert: boolean;
 }
 
@@ -116,6 +117,8 @@ export interface Einheit {
   notizen: string;
   vertretungsnotiz: string;
   ausfallGrund: string;
+  zusatz?: boolean; // Termin ist die Zusatz-Doppelstunde
+  sollDatum?: Datum; // ursprünglicher Regeltermin, falls diese Einheit verlegt wurde
   wettkampfId?: ID;
 }
 

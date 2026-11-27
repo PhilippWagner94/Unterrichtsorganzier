@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { db, neueId } from '../../db/db';
 import type { Klasse } from '../../db/types';
 import { Button, Check, ChipAuswahl, Sheet, TextField, bestaetige } from '../../components/ui';
-import { wochentagName, heute } from '../../lib/dates';
+import { wochentagName, heute, isoWoche } from '../../lib/dates';
 import { schuljahrStartjahr } from '../../lib/schuljahr';
 
 const TAGE = [1, 2, 3, 4, 5].map((n) => ({ value: n, label: wochentagName(n).slice(0, 2) }));
@@ -31,6 +31,7 @@ export function KlasseFormular({
   const [wochentag, setWochentag] = useState(1);
   const [zusatz, setZusatz] = useState(false);
   const [zusatzTag, setZusatzTag] = useState(3);
+  const [zusatzWoche, setZusatzWoche] = useState<'gerade' | 'ungerade'>('ungerade');
 
   useEffect(() => {
     if (!offen) return;
@@ -39,6 +40,7 @@ export function KlasseFormular({
     setWochentag(klasse?.wochentag ?? 1);
     setZusatz(klasse?.zusatzAktiv ?? false);
     setZusatzTag(klasse?.zusatzWochentag ?? 3);
+    setZusatzWoche(klasse?.zusatzWoche ?? 'ungerade');
   }, [offen, klasse, sj]);
 
   async function speichern() {
@@ -50,6 +52,7 @@ export function KlasseFormular({
       wochentag,
       zusatzAktiv: zusatz,
       zusatzWochentag: zusatzTag,
+      zusatzWoche,
       archiviert: klasse?.archiviert ?? false,
     };
     await db.klassen.put(neu);
@@ -69,6 +72,13 @@ export function KlasseFormular({
         <>
           <div className="muted small">Wochentag der zusätzlichen Doppelstunde</div>
           <ChipAuswahl optionen={TAGE} wert={zusatzTag} onChange={setZusatzTag} />
+          <div className="muted small">In welchen Kalenderwochen?</div>
+          <ChipAuswahl
+            optionen={[{ value: 'ungerade' as const, label: 'Ungerade KW' }, { value: 'gerade' as const, label: 'Gerade KW' }]}
+            wert={zusatzWoche}
+            onChange={setZusatzWoche}
+          />
+          <div className="muted small">Aktuell ist KW {isoWoche(heute())} ({isoWoche(heute()) % 2 === 0 ? 'gerade' : 'ungerade'}). Einzelne Zusatzstunden kannst du später im Termin auf eine andere Woche legen.</div>
         </>
       ) : null}
       <div className="btn-row">

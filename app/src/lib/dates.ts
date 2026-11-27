@@ -91,3 +91,13 @@ export function istGueltig(s: string): boolean {
   const d = fromYmd(s);
   return toYmd(d) === s;
 }
+
+/** ISO-Kalenderwoche (Mo–So, Woche 1 enthält den ersten Donnerstag). */
+export function isoWoche(s: Datum): number {
+  const d = fromYmd(s);
+  const tag = (d.getDay() + 6) % 7; // Mo=0
+  d.setDate(d.getDate() - tag + 3); // Donnerstag der Woche
+  const ersterDo = new Date(d.getFullYear(), 0, 4);
+  const diff = (d.getTime() - ersterDo.getTime()) / 86400000;
+  return 1 + Math.round((diff - 3 + ((ersterDo.getDay() + 6) % 7)) / 7);
+}

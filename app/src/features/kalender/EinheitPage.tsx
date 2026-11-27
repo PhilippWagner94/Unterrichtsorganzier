@@ -10,7 +10,7 @@ import { Anhaenge } from '../../components/Anhaenge';
 import { SpielAuswahl, ReiheAuswahl } from '../bibliothek/Auswahl';
 import { markiereAusfall, planNeuVerteilen, stelleEinheitWiederHer } from '../../lib/planAktionen';
 import type { NachAusfall } from '../../lib/plan';
-import { formatLang } from '../../lib/dates';
+import { formatLang, isoWoche } from '../../lib/dates';
 import { doppelstufeFuerKlassenstufe, klassenstufe, schuljahrStartjahr } from '../../lib/schuljahr';
 
 const STATUS: { value: EinheitStatus; label: string }[] = [
@@ -236,7 +236,18 @@ export default function EinheitPage() {
       <Anhaenge bezugTyp="einheit" bezugId={e.id} />
 
       <Section title="Termin" />
-      <TextField label="Datum (zum Verschieben ändern)" type="date" value={e.datum} onChange={(v) => v && set({ datum: v })} />
+      <TextField
+        label="Datum (zum Verschieben ändern)"
+        type="date"
+        value={e.datum}
+        onChange={async (v) => {
+          if (!v || v === e.datum) return;
+          set({ datum: v, sollDatum: e.sollDatum ?? e.datum });
+          await flush();
+          await planNeuVerteilen(e.klasseId, e.schuljahrId);
+        }}
+      />
+      <div className="muted small">KW {isoWoche(e.datum)} ({isoWoche(e.datum) % 2 === 0 ? 'gerade' : 'ungerade'}){e.zusatz ? ' · Zusatz-Doppelstunde' : ''}{e.sollDatum && e.sollDatum !== e.datum ? ` · verlegt (Regeltermin: ${formatLang(e.sollDatum)})` : ''}</div>
       <div className="btn-row">
         <Button
           kind="danger"

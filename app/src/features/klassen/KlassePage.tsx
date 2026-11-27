@@ -64,7 +64,7 @@ export default function KlassePage() {
           {stufe !== undefined && stufe >= 1 && stufe <= 4 ? <Chip>Klassenstufe {stufe}</Chip> : <Chip kind="gray">außerhalb Klasse 1–4</Chip>}
           {klasse.archiviert ? <Chip kind="warn">archiviert</Chip> : null}
           <Chip kind="gray">{wochentagName(klasse.wochentag)}</Chip>
-          {klasse.zusatzAktiv ? <Chip kind="gray">+ alle 2 Wochen {wochentagName(klasse.zusatzWochentag)}</Chip> : null}
+          {klasse.zusatzAktiv ? <Chip kind="gray">+ {wochentagName(klasse.zusatzWochentag)}, {klasse.zusatzWoche === 'gerade' ? 'gerade' : 'ungerade'} KW</Chip> : null}
         </div>
         <div className="btn-row">
           <Link className="btn small" to={`/plan/${klasse.id}`} style={{ textDecoration: 'none' }}>
@@ -83,6 +83,7 @@ export default function KlassePage() {
         aktion={
           <span style={{ display: 'flex', gap: 6 }}>
             <Button small kind="secondary" onClick={() => setSammel(true)}>Liste einfügen</Button>
+            <Link className="btn secondary small" to={`/foto?klasse=${klasse.id}`} style={{ textDecoration: "none" }}>📷 Aus Foto</Link>
             <Button small onClick={() => setNeuesKind(true)}>＋ Kind</Button>
           </span>
         }

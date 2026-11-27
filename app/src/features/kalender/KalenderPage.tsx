@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import { aktiveKlassen, useAktivesSchuljahr, useSchuljahre, waehleSchuljahr } from '../../db/hooks';
 import { Button, Empty, List, Page, Row, Sheet } from '../../components/ui';
-import { addTage, formatLang, fromYmd, heute, monatName, toYmd, wochentag } from '../../lib/dates';
+import { addTage, isoWoche, formatLang, fromYmd, heute, monatName, toYmd, wochentag } from '../../lib/dates';
 import { feiertageImZeitraum } from '../../lib/feiertage';
 import { freiBezeichnung, leereEinheit } from '../../lib/plan';
 import type { Einheit } from '../../db/types';
@@ -98,7 +98,7 @@ export default function KalenderPage() {
         Grau = Ferien/frei, grün = gehalten, rot = Ausfall, 🏆 = Wettkampf. Tippe auf einen Tag für Details.
       </div>
 
-      <Sheet offen={tag !== null} onClose={() => setTag(null)} titel={tag ? formatLang(tag) : ''}>
+      <Sheet offen={tag !== null} onClose={() => setTag(null)} titel={tag ? `${formatLang(tag)} · KW ${isoWoche(tag)}` : ''}>
         {tagFrei ? <div className="chip gray">{tagFrei}</div> : null}
         {tagWk.length ? (
           <List>
@@ -112,7 +112,7 @@ export default function KalenderPage() {
                 key={e.id}
                 to={`/einheit/${e.id}`}
                 title={`Klasse ${klasseName(e.klasseId)}${e.titel ? ' · ' + e.titel : ''}`}
-                sub={`${e.status === 'geplant' ? 'geplant' : e.status}${lbKuerzel(e) ? ' · ' + lbKuerzel(e) : ''}${e.ausfallGrund ? ' · ' + e.ausfallGrund : ''}`}
+                sub={`${e.zusatz ? 'Zusatzstunde · ' : ''}${e.status === 'geplant' ? 'geplant' : e.status}${lbKuerzel(e) ? ' · ' + lbKuerzel(e) : ''}${e.ausfallGrund ? ' · ' + e.ausfallGrund : ''}`}
               />
             ))}
           </List>
