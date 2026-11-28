@@ -6,13 +6,15 @@ import type { Ort } from '../../db/types';
 import { Button, ChipAuswahl, Empty, List, Page, Row, TextField, useToast } from '../../components/ui';
 import { alleTags, filterSpiele } from './filter';
 import { ladeStartsammlung } from './startsammlung';
+import { MaterialTab } from './MaterialTab';
 import { formatDatum } from '../../lib/dates';
 
-type Tab = 'spiele' | 'methodik' | 'entwuerfe' | 'notizen';
+type Tab = 'spiele' | 'methodik' | 'entwuerfe' | 'material' | 'notizen';
 const TABS: { value: Tab; label: string }[] = [
   { value: 'spiele', label: 'Spiele' },
   { value: 'methodik', label: 'Methodik' },
   { value: 'entwuerfe', label: 'Entwürfe' },
+  { value: 'material', label: 'Material' },
   { value: 'notizen', label: 'Notizen' },
 ];
 const ORT_LABEL: Record<Ort, string> = { halle: 'Halle', draussen: 'Draußen', beides: 'Halle/Draußen' };
@@ -24,6 +26,7 @@ export default function BibliothekPage() {
   const [ort, setOrt] = useState<Ort | 'alle'>('alle');
   const [fav, setFav] = useState(false);
   const [tag, setTag] = useState<string | null>(null);
+  const [materialNeu, setMaterialNeu] = useState(false);
   const [toast, zeigeToast] = useToast();
 
   const spiele = useLiveQuery(() => db.spiele.toArray(), [], []) ?? [];
@@ -66,7 +69,7 @@ export default function BibliothekPage() {
   }
 
   const aktion =
-    tab === 'spiele' ? <button onClick={neuesSpiel}>＋ Spiel</button> : tab === 'methodik' ? <button onClick={neueReihe}>＋ Reihe</button> : tab === 'entwuerfe' ? <button onClick={neuerEntwurf}>＋ Entwurf</button> : <button onClick={neueNotiz}>＋ Notiz</button>;
+    tab === 'spiele' ? <button onClick={neuesSpiel}>＋ Spiel</button> : tab === 'methodik' ? <button onClick={neueReihe}>＋ Reihe</button> : tab === 'entwuerfe' ? <button onClick={neuerEntwurf}>＋ Entwurf</button> : tab === 'material' ? <button onClick={() => setMaterialNeu(true)}>＋ Material</button> : <button onClick={neueNotiz}>＋ Notiz</button>;
 
   return (
     <Page title="Bibliothek" aktion={aktion}>
@@ -133,6 +136,8 @@ export default function BibliothekPage() {
           </List>
         )
       ) : null}
+
+      {tab === 'material' ? <MaterialTab neuesOeffnen={materialNeu} setNeuesOeffnen={setMaterialNeu} /> : null}
 
       {tab === 'notizen' ? (
         notizen.length === 0 ? <Empty>Noch keine Notizen.</Empty> : (

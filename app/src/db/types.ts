@@ -163,6 +163,29 @@ export interface Einheit {
   zusatz?: boolean; // Termin ist die Zusatz-Doppelstunde
   sollDatum?: Datum; // ursprünglicher Regeltermin, falls diese Einheit verlegt wurde
   wettkampfId?: ID;
+  anwesenheit?: AnwesenheitEintrag[]; // Anwesenheit und Fehlverhalten dieser Stunde
+  anwesenheitErfasst?: boolean;
+}
+
+export type AnwesenheitStatus = 'da' | 'krank' | 'fehlt';
+
+export interface AnwesenheitEintrag {
+  schuelerId: ID;
+  status: AnwesenheitStatus;
+  fehlverhalten?: boolean;
+  gruende?: string[]; // Vorauswahl
+  text?: string; // Freitext
+}
+
+export interface MaterialItem {
+  id: ID;
+  name: string;
+  kategorie: string;
+  anzahl?: number;
+  vorhanden: boolean;
+  notiz: string;
+  aufgabeId?: ID; // verknüpfte Aufgabe (beschaffen / erstellen)
+  erstellt: number;
 }
 
 export interface Spiel {
@@ -229,12 +252,16 @@ export interface Testergebnis {
 export interface CheckPunkt {
   text: string;
   erledigt: boolean;
+  schuelerId?: ID; // automatisch erzeugter Punkt pro Kind (Einverständnis)
 }
 
 export interface Wettkampf {
   id: ID;
   name: string;
   datum: Datum;
+  beginn?: string; // Uhrzeit 'HH:MM'
+  ende?: string;
+  treffzeit?: string; // Treffpunkt/Abfahrt
   ort: string;
   notizen: string;
   klassenstufen: number[];

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
@@ -12,6 +12,10 @@ import { letztesBackup } from '../../db/backup';
 import type { Einheit } from '../../db/types';
 import { AufgabenUebersicht, ZEITRAEUME } from '../aufgaben/Uebersicht';
 import { aufgabeZeit, einheitZeit, spanne } from '../../lib/zeit';
+import { WettkampfChecklisten } from '../wettkaempfe/WettkampfChecklisten';
+import { AnwesenheitSheet } from '../anwesenheit/AnwesenheitSheet';
+import { anwesenheitOffen, fehlverhaltenAusVorstunde } from '../../lib/anwesenheit';
+import { toMin } from '../../lib/zeit';
 import { offeneTests } from '../../lib/offeneTests';
 import { vollerName } from '../../lib/schuljahr';
 
@@ -34,6 +38,24 @@ export default function HeutePage() {
   const offen = offeneTests(einheiten.filter((e) => aktiv.some((a) => a.klasse.id === e.klasseId)), tests, alleSchueler, ergebnisse, h);
   const [tage, setTage] = useState(() => { try { return Number(localStorage.getItem('heuteTage') ?? 3); } catch { return 3; } });
   const aendereTage = (n: number) => { setTage(n); try { localStorage.setItem('heuteTage', String(n)); } catch { /* egal */ } };
+  const [anwId, setAnwId] = useState<string | null>(null);
+  const jetzt = new Date();
+  const jetztMin = jetzt.getHours() * 60 + jetzt.getMinutes();
+  const anwOffenListe = anwesenheitOffen(
+    einheiten.filter((e) => aktiv.some((a) => a.klasse.id === e.klasseId) && alleSchueler.some((s) => s.klasseId === e.klasseId)),
+    h, jetztMin,
+    (e) => toMin(einheitZeit(e, klassen.find((k) => k.id === e.klasseId))?.bis),
+  );
+  const ersteHeute = anwOffenListe.find((e) => e.datum === h);
+  useEffect(() => {
+    if (!ersteHeute) return;
+    try {
+      if (sessionStorage.getItem('anwAngeboten-' + ersteHeute.id)) return;
+      sessionStorage.setItem('anwAngeboten-' + ersteHeute.id, '1');
+    } catch { /* egal */ }
+    setAnwId(ersteHeute.id);
+  }, [ersteHeute?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const anwEinheit = einheiten.find((e) => e.id === anwId) ?? null;
   const klasseName = (id: string) => klassen.find((k) => k.id === id)?.name ?? '';
   const lbName = (e: Einheit) => (e.istPuffer ? 'Pufferstunde' : lernbereiche.find((l) => l.id === e.lernbereichId)?.name ?? '');
   const heutige = einheiten.filter((e) => e.datum === h && aktiv.some((a) => a.klasse.id === e.klasseId));
@@ -68,6 +90,20 @@ export default function HeutePage() {
         </div>
       </Section>
       <AufgabenUebersicht tage={tage} />
+
+      {anwOffenListe.length ? (
+        <Section title="Anwesenheit noch nicht eingetragen">
+          {anwOffenListe.map((e) => (
+            <Card key={e.id}>
+              <strong>Klasse {klasseName(e.klasseId)}</strong> · {e.datum.split('-').reverse().slice(0, 2).join('.')}.
+              <div className="btn-row"><Button small onClick={() => setAnwId(e.id)}>Namensliste öffnen</Button></div>
+            </Card>
+          ))}
+        </Section>
+      ) : null}
+      {anwEinheit ? <AnwesenheitSheet einheit={anwEinheit} offen onClose={() => setAnwId(null)} /> : null}
+
+      <WettkampfChecklisten />
 
       {offen.length ? (
         <Section title="Noten noch offen">
@@ -104,6 +140,9 @@ export default function HeutePage() {
                   <Link to={`/einheit/${e.id}`} className="main" style={{ color: 'inherit', textDecoration: 'none' }}>
                     <div className="title">{(() => { const t = einheitZeit(e, k); return t ? `${t.von}–${t.bis} · ` : ''; })()}Klasse {k?.name} {e.status !== 'geplant' ? <Chip kind={e.status === 'ausfall' ? 'red' : 'gray'}>{e.status}</Chip> : null}</div>
                     <div className="sub">{e.titel || lbName(e) || 'noch nicht verplant'}</div>
+                    {fehlverhaltenAusVorstunde(einheiten, e, alleSchueler).map((x) => (
+                      <div key={x.schueler.id} className="small" style={{ color: 'var(--warn, #c0392b)' }}>⚠️ {vollerName(x.schueler)} (letzte Stunde): {[...x.gruende, x.text].filter(Boolean).join(' · ') || 'Fehlverhalten'}</div>
+                    ))}
                   </Link>
                   {e.status === 'geplant' ? <Button small onClick={() => gehalten(e)}>✓ Gehalten</Button> : null}
                 </div>
@@ -141,7 +180,7 @@ export default function HeutePage() {
         <Section title="Wettkämpfe in den nächsten 3 Wochen">
           <List>
             {kommendeWk.map((w) => (
-              <Row key={w.id} title={`🏆 ${w.name}`} sub={`${formatLang(w.datum)}${w.ort ? ' · ' + w.ort : ''} · ${w.teilnahme === 'lehrkraft' ? 'nur Lehrkraft' : `${w.schuelerIds.length} Kinder`}`} to={`/wettkampf/${w.id}`} />
+              <Row key={w.id} title={`🏆 ${w.name}`} sub={`${formatLang(w.datum)}${w.beginn ? ', ' + w.beginn + ' Uhr' : ''}${w.ort ? ' · ' + w.ort : ''} · ${w.teilnahme === 'lehrkraft' ? 'nur Lehrkraft' : `${w.schuelerIds.length} Kinder`}`} to={`/wettkampf/${w.id}`} />
             ))}
           </List>
         </Section>

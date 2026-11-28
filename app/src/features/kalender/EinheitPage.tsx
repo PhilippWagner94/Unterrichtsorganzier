@@ -12,6 +12,9 @@ import { SpielAuswahl, ReiheAuswahl } from '../bibliothek/Auswahl';
 import { markiereAusfall, planNeuVerteilen, stelleEinheitWiederHer } from '../../lib/planAktionen';
 import type { NachAusfall } from '../../lib/plan';
 import { entwurfAusEinheit, inhaltAusEntwurf } from '../../lib/material';
+import { AnwesenheitSheet } from '../anwesenheit/AnwesenheitSheet';
+import { fehlverhaltenAusVorstunde } from '../../lib/anwesenheit';
+import { vollerName } from '../../lib/schuljahr';
 import { AufgabenInEinheit } from '../aufgaben/AufgabenInEinheit';
 import { TestsInEinheit } from '../tests/TestsInEinheit';
 import { formatLang, isoWoche } from '../../lib/dates';
@@ -97,6 +100,9 @@ export default function EinheitPage() {
   const spiele = useLiveQuery(() => db.spiele.toArray(), [], []) ?? [];
   const reihen = useLiveQuery(() => db.reihen.toArray(), [], []) ?? [];
 
+  const [anwOffen, setAnwOffen] = useState(false);
+  const alleEinheiten = useLiveQuery(() => db.einheiten.toArray(), [], []) ?? [];
+  const alleKinder = useLiveQuery(() => db.schueler.toArray(), [], []) ?? [];
   const [entwurfWahl, setEntwurfWahl] = useState(false);
   const [toast, zeigeToast] = useToast();
   const entwuerfe = useLiveQuery(() => db.entwuerfe.toArray(), [], []) ?? [];
@@ -111,6 +117,7 @@ export default function EinheitPage() {
   if (e === undefined) return <Page title="Einheit" zurueck><Empty>Lädt …</Empty></Page>;
   if (e === null) return <Page title="Einheit" zurueck><Empty>Einheit nicht gefunden.</Empty></Page>;
 
+  const vorHinweise = fehlverhaltenAusVorstunde(alleEinheiten, e, alleKinder);
   const stufe = klasse && schuljahr ? klassenstufe(klasse, schuljahrStartjahr(schuljahr.start)) : undefined;
   const doppel = stufe ? doppelstufeFuerKlassenstufe(stufe) : undefined;
   const zielListe = lernziele.filter(
@@ -193,6 +200,21 @@ export default function EinheitPage() {
           <TextArea label="Was wurde ungefähr gemacht?" value={e.vertretungsnotiz} onChange={(v) => set({ vertretungsnotiz: v })} />
         </Card>
       ) : null}
+
+      {vorHinweise.length ? (
+        <Card kind="warn">
+          <strong>Fehlverhalten in der Stunde davor ({formatLang(vorHinweise[0].einheit.datum)})</strong>
+          {vorHinweise.map((h) => (
+            <div key={h.schueler.id} className="small">{vollerName(h.schueler)}: {[...h.gruende, h.text].filter(Boolean).join(' · ') || 'ohne Angabe'}</div>
+          ))}
+        </Card>
+      ) : null}
+      <div className="btn-row">
+        <Button small kind="secondary" onClick={() => setAnwOffen(true)}>
+          {e.anwesenheitErfasst ? `✓ Anwesenheit: ${(e.anwesenheit ?? []).filter((a) => a.status !== 'da').length} fehlen${(e.anwesenheit ?? []).some((a) => a.fehlverhalten) ? ' · ⚠️ Fehlverhalten' : ''}` : 'Anwesenheit / Verhalten erfassen'}
+        </Button>
+      </div>
+      <AnwesenheitSheet einheit={e} offen={anwOffen} onClose={() => setAnwOffen(false)} speichernAls={set} />
 
       <Section title="Inhalt" />
       <SelectField label="Lernbereich" value={lbWert} onChange={lernbereichWaehlen} options={lbOptionen} />

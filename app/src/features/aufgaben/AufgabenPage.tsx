@@ -11,6 +11,7 @@ import { freiBezeichnung } from '../../lib/plan';
 import { AufgabeSheet, type AufgabeVorgabe } from './AufgabeSheet';
 import { AufgabeZeile } from './AufgabeZeile';
 import { AufgabenUebersicht } from './Uebersicht';
+import { WettkampfChecklisten } from '../wettkaempfe/WettkampfChecklisten';
 
 export default function AufgabenPage() {
   const h = heute();
@@ -44,6 +45,7 @@ export default function AufgabenPage() {
       </div>
 
       <AufgabenUebersicht tage={tage} />
+      <WettkampfChecklisten />
 
       {ohne.length ? (
         <Section title="Ohne Datum">

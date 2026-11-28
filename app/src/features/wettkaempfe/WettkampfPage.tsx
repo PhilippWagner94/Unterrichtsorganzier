@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import { useKlassenAktiv } from '../../db/hooks';
-import { Button, Card, Check, Chip, ChipAuswahl, Empty, List, Page, Row, Section, TextArea, TextField, bestaetige, useToast } from '../../components/ui';
+import { Button, Sheet, Card, Check, Chip, ChipAuswahl, Empty, List, Page, Row, Section, TextArea, TextField, bestaetige, useToast } from '../../components/ui';
 import { Anhaenge } from '../../components/Anhaenge';
 import { useAutosave } from '../../lib/useAutosave';
 import { markiereAusfall } from '../../lib/planAktionen';
 import { vollerName } from '../../lib/schuljahr';
+import { STANDARD_PUNKTE, einverstaendnisAbgleichen, frueherePunkte, kindName, wettkampfKopieren } from '../../lib/wettkampf';
+import { neueId } from '../../db/db';
 
 export default function WettkampfPage() {
   const { id = '' } = useParams();
@@ -18,7 +20,16 @@ export default function WettkampfPage() {
   const einheitenAmTag = useLiveQuery(() => (w ? db.einheiten.where('datum').equals(w.datum).toArray() : []), [w?.datum], []) ?? [];
   const alleKlassen = useLiveQuery(() => db.klassen.toArray(), [], []) ?? [];
   const [neuerPunkt, setNeuerPunkt] = useState('');
+  const [schnell, setSchnell] = useState(false);
+  const [auswahl, setAuswahl] = useState<string[]>([]);
+  const alleWk = useLiveQuery(() => db.wettkaempfe.toArray(), [], []) ?? [];
   const [toast, zeigeToast] = useToast();
+
+  useEffect(() => {
+    if (!w) return;
+    const abgl = einverstaendnisAbgleichen(w.checkliste, w.schuelerIds, w.teilnahme);
+    if (abgl.length !== w.checkliste.length) set({ checkliste: abgl });
+  }, [w?.id, w?.schuelerIds.length, w?.teilnahme]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (w === undefined) return <Page title="Wettkampf" zurueck><Empty>Lädt …</Empty></Page>;
   if (w === null) return <Page title="Wettkampf" zurueck><Empty>Wettkampf nicht gefunden.</Empty></Page>;
@@ -34,19 +45,26 @@ export default function WettkampfPage() {
   }
   function kindUmschalten(sid: string, an: boolean) {
     if (!w) return;
-    set({ schuelerIds: an ? [...w.schuelerIds, sid] : w.schuelerIds.filter((x) => x !== sid) });
+    const ids = an ? [...w.schuelerIds, sid] : w.schuelerIds.filter((x) => x !== sid);
+    set({ schuelerIds: ids, checkliste: einverstaendnisAbgleichen(w.checkliste, ids, w.teilnahme) });
   }
   function klasseSetzen(kid: string, alle: boolean) {
     if (!w) return;
     const ids = alleSchueler.filter((s) => s.klasseId === kid).map((s) => s.id);
     const ohne = w.schuelerIds.filter((x) => !ids.includes(x));
-    set({ schuelerIds: alle ? [...ohne, ...ids] : ohne });
+    const neu = alle ? [...ohne, ...ids] : ohne;
+    set({ schuelerIds: neu, checkliste: einverstaendnisAbgleichen(w.checkliste, neu, w.teilnahme) });
   }
 
   return (
     <Page title={w.name || 'Wettkampf'} zurueck>
       <TextField label="Name" value={w.name} onChange={(v) => set({ name: v })} />
       <TextField label="Datum" type="date" value={w.datum} onChange={(v) => v && set({ datum: v })} />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ flex: 1 }}><TextField label="Beginn" type="time" value={w.beginn ?? ''} onChange={(v) => set({ beginn: v || undefined })} /></div>
+        <div style={{ flex: 1 }}><TextField label="Ende" type="time" value={w.ende ?? ''} onChange={(v) => set({ ende: v || undefined })} /></div>
+        <div style={{ flex: 1 }}><TextField label="Treffzeit" type="time" value={w.treffzeit ?? ''} onChange={(v) => set({ treffzeit: v || undefined })} /></div>
+      </div>
       <TextField label="Ort" value={w.ort} onChange={(v) => set({ ort: v })} />
       <TextArea label="Notizen" value={w.notizen} onChange={(v) => set({ notizen: v })} />
 
@@ -61,7 +79,7 @@ export default function WettkampfPage() {
       <ChipAuswahl
         optionen={[{ value: 'kinder' as const, label: 'Mit Kindern' }, { value: 'lehrkraft' as const, label: 'Nur Lehrkraft (keine Kinder)' }]}
         wert={w.teilnahme}
-        onChange={(v) => set({ teilnahme: v })}
+        onChange={(v) => set({ teilnahme: v, checkliste: einverstaendnisAbgleichen(w.checkliste, w.schuelerIds, v) })}
       />
 
       {w.teilnahme === 'kinder' ? (
@@ -96,11 +114,12 @@ export default function WettkampfPage() {
         {w.checkliste.map((p, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ flex: 1 }}>
-              <Check label={p.text} checked={p.erledigt} onChange={(v) => set({ checkliste: w.checkliste.map((x, k) => (k === i ? { ...x, erledigt: v } : x)) })} />
+              <Check label={p.schuelerId ? `${p.text}: ${kindName(alleSchueler.find((s) => s.id === p.schuelerId))}` : p.text} checked={p.erledigt} onChange={(v) => set({ checkliste: w.checkliste.map((x, k) => (k === i ? { ...x, erledigt: v } : x)) })} />
             </div>
             <Button small kind="secondary" onClick={() => set({ checkliste: w.checkliste.filter((_, k) => k !== i) })}>✕</Button>
           </div>
         ))}
+        <div className="btn-row"><Button small kind="secondary" onClick={() => { setAuswahl([]); setSchnell(true); }}>📋 Aus früheren Wettkämpfen / Vorschlägen</Button></div>
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <input type="text" value={neuerPunkt} placeholder="Neuer Punkt" onChange={(e) => setNeuerPunkt(e.target.value)} />
           <Button
@@ -111,6 +130,27 @@ export default function WettkampfPage() {
           </Button>
         </div>
       </Card>
+
+      <Sheet offen={schnell} onClose={() => setSchnell(false)} titel="Checklistenpunkte wählen">
+        {(() => {
+          const frueher = frueherePunkte(alleWk, w.id);
+          const vorschlaege = [...frueher, ...STANDARD_PUNKTE.filter((p) => !frueher.includes(p))].filter((t) => !w.checkliste.some((p) => !p.schuelerId && p.text === t));
+          return vorschlaege.length === 0 ? <div className="muted">Alle Vorschläge sind schon in der Liste.</div> : (
+            <div className="chips">
+              {vorschlaege.map((t) => (
+                <button key={t} className={`chip-btn ${auswahl.includes(t) ? 'on' : ''}`} onClick={() => setAuswahl(auswahl.includes(t) ? auswahl.filter((x) => x !== t) : [...auswahl, t])}>
+                  {t}{frueher.includes(t) ? ' ★' : ''}
+                </button>
+              ))}
+            </div>
+          );
+        })()}
+        <div className="muted small">★ = aus früheren Wettkämpfen</div>
+        <div className="btn-row">
+          <Button disabled={!auswahl.length} onClick={() => { set({ checkliste: [...w.checkliste, ...auswahl.map((text) => ({ text, erledigt: false }))] }); setSchnell(false); }}>{auswahl.length} hinzufügen</Button>
+          <Button kind="secondary" onClick={() => setSchnell(false)}>Abbrechen</Button>
+        </div>
+      </Sheet>
 
       <Section title="Unterricht an diesem Tag" />
       {relevantEinheiten.length === 0 ? (
@@ -146,6 +186,18 @@ export default function WettkampfPage() {
       <Anhaenge bezugTyp="wettkampf" bezugId={w.id} />
 
       <div className="btn-row">
+        <Button
+          kind="secondary"
+          onClick={async () => {
+            await flush();
+            const k = wettkampfKopieren(w, neueId());
+            await db.wettkaempfe.add(k);
+            nav(`/wettkampf/${k.id}`, { replace: true });
+            zeigeToast('Kopie angelegt – Datum anpassen');
+          }}
+        >
+          Kopieren
+        </Button>
         <Button
           kind="danger"
           onClick={async () => {

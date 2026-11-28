@@ -26,7 +26,7 @@ export default function WettkaempfePage() {
       title={w.name}
       sub={
         <>
-          {formatLang(w.datum)}{w.ort ? ` · ${w.ort}` : ''}
+          {formatLang(w.datum)}{w.beginn ? `, ${w.beginn}${w.ende ? '–' + w.ende : ''} Uhr` : ''}{w.ort ? ` · ${w.ort}` : ''}
           <div style={{ marginTop: 4 }}>
             {w.klassenstufen.map((k) => <Chip key={k}>Klasse {k}</Chip>)}
             <Chip kind="gray">{w.teilnahme === 'lehrkraft' ? 'Nur Lehrkraft' : `${w.schuelerIds.length} Kinder`}</Chip>

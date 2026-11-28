@@ -403,3 +403,21 @@ describe('Mehrtägige Verpflichtung', () => {
     expect(verpflichtungenAm([f], '2026-12-09', [])).toHaveLength(0);
   });
 });
+
+import { anwesenheitOffen as _aw, fehlverhaltenAusVorstunde as _fv } from './anwesenheit';
+describe('Anwesenheit', () => {
+  const basis = { klasseId: 'k', status: 'gehalten' } as never;
+  const e = (id: string, datum: string, extra: object = {}) => ({ ...(basis as object), id, datum, ...extra }) as never;
+  it('liefert Fehlverhalten der letzten erfassten Stunde', () => {
+    const l = [e('a', '2026-11-01', { anwesenheitErfasst: true, anwesenheit: [{ schuelerId: 's1', status: 'da', fehlverhalten: true, gruende: ['Stört den Unterricht'], text: 'x' }] }), e('b', '2026-11-08')];
+    const r = _fv(l, { klasseId: 'k', datum: '2026-11-08', id: 'b' }, [{ id: 's1', vorname: 'A', nachname: 'B' }] as never);
+    expect(r).toHaveLength(1);
+    expect(r[0].gruende[0]).toBe('Stört den Unterricht');
+  });
+  it('zeigt nur beendete, nicht erfasste Stunden', () => {
+    const l = [e('a', '2026-11-28'), e('b', '2026-11-28', { anwesenheitErfasst: true }), e('c', '2026-11-25')];
+    const r = _aw(l, '2026-11-28', 600, () => 700);
+    expect(r.map((x) => x.id)).toEqual(['c']);
+    expect(_aw(l, '2026-11-28', 800, () => 700).map((x) => x.id)).toEqual(['c', 'a']);
+  });
+});
