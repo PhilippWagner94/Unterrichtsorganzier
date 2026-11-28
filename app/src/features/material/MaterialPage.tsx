@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import { speichereTextdatei } from '../../db/backup';
 import { Button, Card, Check, Page, Section, bestaetige, useToast } from '../../components/ui';
+import { materialAlsPdf } from '../../lib/materialPdf';
 import { MaterialFehler, erzeugeMaterialExport, importiereMaterial, parseMaterial, type MaterialAuswahl } from '../../lib/material';
 
 const NAMEN: Record<string, string> = { spiele: 'Spiele', reihen: 'Methodische Reihen', notizen: 'Notizen', tests: 'Tests', entwuerfe: 'Stundenentwürfe', anhaenge: 'Bilder' };
@@ -25,6 +26,28 @@ export default function MaterialPage() {
       if (r !== 'abgebrochen') zeigeToast(`Exportiert: ${fmt(anzahl)}`);
     } catch (e) {
       zeigeToast('Export fehlgeschlagen: ' + (e as Error).message);
+    } finally { setLaeuft(false); }
+  }
+
+  async function alsPdf() {
+    setLaeuft(true);
+    try {
+      const { text } = await erzeugeMaterialExport({ ...a, bilder: false });
+      const roh = JSON.parse(text) as { tabellen: Record<string, Record<string, unknown>[]> };
+      const blob = await materialAlsPdf(roh.tabellen);
+      const name = `unterrichtsmaterial-${new Date().toISOString().slice(0, 10)}.pdf`;
+      const datei = new File([blob], name, { type: 'application/pdf' });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (nav.share && nav.canShare?.({ files: [datei] })) {
+        try { await nav.share({ files: [datei], title: 'Unterrichtsmaterial' }); return; } catch (e) { if ((e as DOMException).name === 'AbortError') return; }
+      }
+      const url = URL.createObjectURL(datei);
+      const l = document.createElement('a');
+      l.href = url; l.download = name; document.body.appendChild(l); l.click(); l.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      zeigeToast('PDF erstellt');
+    } catch (e) {
+      zeigeToast('PDF fehlgeschlagen: ' + (e as Error).message);
     } finally { setLaeuft(false); }
   }
 
@@ -56,7 +79,8 @@ export default function MaterialPage() {
       <Check label="Tests (nur Beschreibung und Bewertungstabelle, ohne Ergebnisse)" checked={a.tests} onChange={(v) => set({ tests: v })} />
       <Check label="Bilder zu Spielen und Reihen" checked={a.bilder} onChange={(v) => set({ bilder: v })} />
       <Check label="Notizen (Achtung: können Persönliches enthalten, bitte vorher prüfen)" checked={a.notizen} onChange={(v) => set({ notizen: v })} />
-      <div className="btn-row"><Button onClick={exportieren} disabled={laeuft}>📤 Exportieren</Button></div>
+      <div className="btn-row"><Button onClick={exportieren} disabled={laeuft}>📤 Exportieren (Datei)</Button><Button kind="secondary" onClick={alsPdf} disabled={laeuft}>📄 Als PDF</Button></div>
+      <div className="muted small">Die Datei kann wieder importiert werden; das PDF ist zum Lesen und Ausdrucken.</div>
 
       <Section title="Material importieren" />
       <div className="muted small">Fügt Material aus einer solchen Datei hinzu. Vorhandenes wird nicht überschrieben.</div>
