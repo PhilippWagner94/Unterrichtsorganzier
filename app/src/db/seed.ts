@@ -1,3 +1,4 @@
+import { istSammlungsSpiel, spielMitKanonischenTags } from '../lib/tags';
 import { db, getEinstellung, setEinstellung } from './db';
 import type { Fach, FreierTag, Lernbereich, Lernziel, Schuljahr, Test } from './types';
 import { FACH_SPORT_ID, LERNBEREICHE, LERNZIELE } from '../data/lehrplanSport';
@@ -88,6 +89,17 @@ export async function ergaenzungenAnwenden(): Promise<void> {
     for (const lb of lernbereiche.filter((l) => l.id === 'lb-bt')) if (!(await db.lernbereiche.get(lb.id))) await db.lernbereiche.put(lb);
     for (const lz of lernziele.filter((l) => l.lernbereichId === 'lb-bt')) if (!(await db.lernziele.get(lz.id))) await db.lernziele.put(lz);
     await setEinstellung('ergaenzung-basistests', true);
+  });
+}
+
+/** Einmalig: Schlagwörter der importierten Spielesammlung auf die feste Liste zusammenfassen. */
+export async function tagsAufraeumen(): Promise<void> {
+  if (await getEinstellung<boolean>('ergaenzung-tags-v1', false)) return;
+  const spiele = await db.spiele.toArray();
+  const neu = spiele.filter(istSammlungsSpiel).map(spielMitKanonischenTags);
+  await db.transaction('rw', [db.spiele, db.einstellungen], async () => {
+    if (neu.length) await db.spiele.bulkPut(neu);
+    await setEinstellung('ergaenzung-tags-v1', true);
   });
 }
 

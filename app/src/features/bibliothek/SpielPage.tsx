@@ -1,3 +1,4 @@
+import { TAG_NAMEN } from '../../lib/tags';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../db/db';
@@ -46,6 +47,11 @@ export default function SpielPage() {
           <button key={t} className="chip-btn on" onClick={() => set({ ziele: s.ziele.filter((x) => x !== t) })} aria-label={`${t} entfernen`}>
             {t} ✕
           </button>
+        ))}
+      </div>
+      <div className="chips">
+        {TAG_NAMEN.filter((t) => !s.ziele.includes(t)).map((t) => (
+          <button key={t} className="chip-btn" onClick={() => set({ ziele: [...s.ziele, t] })}>＋ {t}</button>
         ))}
       </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>

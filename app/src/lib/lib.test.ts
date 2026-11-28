@@ -421,3 +421,15 @@ describe('Anwesenheit', () => {
     expect(_aw(l, '2026-11-28', 800, () => 700).map((x) => x.id)).toEqual(['c', 'a']);
   });
 });
+
+import { kanonischeTags as _kt, spielMitKanonischenTags as _sk, TAG_NAMEN as _tn } from './tags';
+describe('Tags', () => {
+  it('fasst Schlagwörter zusammen', () => {
+    expect(_kt(['Ballspiele (Werfen + Treffen)', '---', 'Fang-'])).toEqual(['Ballspiel', 'Fangspiel']);
+    expect(_tn.length).toBeLessThanOrEqual(20);
+  });
+  it('lässt eigene Spiele unberührt', () => {
+    const s = { quelle: 'Buch', ziele: ['Mein Tag'], titel: 'x' } as never;
+    expect(_sk(s)).toBe(s);
+  });
+});

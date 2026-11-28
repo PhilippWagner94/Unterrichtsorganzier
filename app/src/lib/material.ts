@@ -1,6 +1,7 @@
 import { db } from '../db/db';
 import { zeileAusJson, zeileZuJson } from '../db/backup';
-import type { Einheit, Entwurf } from '../db/types';
+import type { Einheit, Entwurf, Spiel } from '../db/types';
+import { spielMitKanonischenTags } from './tags';
 import { klassenstufe, schuljahrStartjahr } from './schuljahr';
 
 export const MATERIAL_FORMAT = 'unterrichtsorganizer-material';
@@ -100,7 +101,8 @@ const ZIEL: Record<string, 'spiele' | 'reihen' | 'notizen' | 'tests' | 'entwuerf
 export async function importiereMaterial(d: MaterialDatei): Promise<Record<string, number>> {
   const out: Record<string, number> = {};
   for (const [name, tabelle] of Object.entries(ZIEL)) {
-    const zeilen = (d.tabellen[name] ?? []).map(zeileAusJson) as { id: string }[];
+    let zeilen = (d.tabellen[name] ?? []).map(zeileAusJson) as { id: string }[];
+    if (name === 'spiele') zeilen = (zeilen as unknown as Spiel[]).map(spielMitKanonischenTags);
     if (!zeilen.length) continue;
     const t = db.table(tabelle);
     const da = new Set((await t.bulkGet(zeilen.map((z) => z.id))).filter(Boolean).map((z) => z.id));
