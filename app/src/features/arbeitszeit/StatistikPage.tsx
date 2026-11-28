@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, neueId, setEinstellung } from '../../db/db';
 import { Balken, Button, Card, Empty, Page, Section, TextField } from '../../components/ui';
 import { formatKurz, heute } from '../../lib/dates';
-import { imZeitraum, nachKategorie, perioden, summe, vorherigerZeitraum, wochenMitEintraegen, zeitraum, type ZeitraumTyp } from '../../lib/arbeitszeit';
+import { ABWESENHEIT, imZeitraum, nachKategorie, perioden, summe, vorherigerZeitraum, wochenMitEintraegen, zeitraum, type ZeitraumTyp } from '../../lib/arbeitszeit';
 import { formatDauer, formatStunden } from '../../lib/zeit';
 import { useZeitGruppen, useZeitKategorien } from './zeitDaten';
 
@@ -28,7 +28,7 @@ export default function StatistikPage() {
   const [vergleich, setVergleich] = useState<'woche' | 'monat' | 'schuljahr'>('woche');
   const [gruppenName, setGruppenName] = useState('');
 
-  const gewaehlt = useMemo(() => auswahl ?? new Set(kategorien.map((k) => k.id)), [auswahl, kategorien]);
+  const gewaehlt = useMemo(() => auswahl ?? new Set(kategorien.filter((k) => !ABWESENHEIT.includes(k.id)).map((k) => k.id)), [auswahl, kategorien]);
   const z = zeitraum(typ, h, eigen);
   const davor = vorherigerZeitraum(z, typ);
   const imZ = imZeitraum(alle, z);
@@ -62,7 +62,7 @@ export default function StatistikPage() {
 
       <Section title="Was zählt mit?" />
       <div className="chips">
-        <button className={`chip-btn ${auswahl === null ? 'on' : ''}`} onClick={() => setAuswahl(null)}>Alles</button>
+        <button className={`chip-btn ${auswahl === null ? 'on' : ''}`} onClick={() => setAuswahl(null)}>Alle Arbeit</button>
         {gruppen.map((g) => (
           <button key={g.id} className="chip-btn" onClick={() => setAuswahl(new Set(g.kategorieIds))}>{g.name}</button>
         ))}
@@ -96,6 +96,13 @@ export default function StatistikPage() {
         </div>
         {wochen > 0 ? <div className="small muted">Durchschnitt pro Woche mit Einträgen: {formatDauer(gesamtAuswahl / wochen)} ({wochen} Woche(n))</div> : null}
       </Card>
+
+      {(() => {
+        const tageAb = (id: string) => new Set(imZ.filter((e) => e.kategorieId === id).map((e) => e.datum)).size;
+        const u = tageAb('zk-urlaub');
+        const k = tageAb('zk-krank');
+        return u || k ? <Card kind="soft"><div className="small">Abwesenheit im Zeitraum: {u} Tage Urlaub, {k} Tage krank (nicht in der Arbeitszeit enthalten)</div></Card> : null;
+      })()}
 
       <Section title="Aufschlüsselung" />
       {imZ.length === 0 ? <Empty>Im Zeitraum sind keine Einträge erfasst.</Empty> : (

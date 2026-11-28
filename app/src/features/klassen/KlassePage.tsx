@@ -131,8 +131,8 @@ export default function KlassePage() {
       </Sheet>
 
       <Sheet offen={sammel} onClose={() => setSammel(false)} titel="Kinderliste einfügen">
-        <p className="muted small">Eine Zeile pro Kind: <b>Vorname; Name; TT.MM.JJJJ; w</b> (Geschlecht w/m/d optional). Trennzeichen Semikolon oder Tab, so lässt sich auch eine Tabelle direkt einfügen.</p>
-        <TextArea label="Liste" value={liste} onChange={setListe} rows={8} placeholder={'Lea; Müller; 04.03.2018; w\nBen; Koch; 12.12.2017; m'} />
+        <p className="muted small">Eine Zeile pro Kind: <b>Name; Vorname; TT.MM.JJJJ; w</b> (Geschlecht w/m/d optional). Trennzeichen Semikolon oder Tab, so lässt sich auch eine Tabelle direkt einfügen.</p>
+        <TextArea label="Liste" value={liste} onChange={setListe} rows={8} placeholder={'Müller; Lea; 04.03.2018; w\nKoch; Ben; 12.12.2017; m'} />
         {liste.trim() ? (
           <div className="small" style={{ marginBottom: 8 }}>
             <div>✅ {vorschau.ok.length} Kinder erkannt</div>

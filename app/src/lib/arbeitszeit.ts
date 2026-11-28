@@ -12,8 +12,14 @@ export const STANDARD_KATEGORIEN: Omit<ZeitKategorie, 'sortierung'>[] = [
   { id: 'zk-nachbereitung', name: 'Nachbereitung' },
   { id: 'zk-korrektur', name: 'Korrektur und Noten' },
   { id: 'zk-verwaltung', name: 'Verwaltung und Organisation' },
+  { id: 'zk-fortbildung', name: 'Fortbildung' },
   { id: 'zk-sonstiges', name: 'Sonstiges' },
+  { id: 'zk-urlaub', name: 'Urlaub' },
+  { id: 'zk-krank', name: 'Krank' },
 ];
+
+/** Zeiten ohne Arbeitsleistung: erscheinen nicht in der Arbeitszeit, sondern als Tage. */
+export const ABWESENHEIT = ['zk-urlaub', 'zk-krank'];
 
 export const STANDARD_GRUPPEN = [
   { id: 'zg-praesenz', name: 'Unterricht + Aufsichten', kategorieIds: ['zk-unterricht', 'zk-aufsicht'] },
@@ -22,6 +28,7 @@ export const STANDARD_GRUPPEN = [
 ];
 
 export const KATEGORIE_FUER_ART: Record<NonNullable<Aufgabe['art']>, string> = {
+  fortbildung: 'zk-fortbildung',
   aufsicht_hof: 'zk-aufsicht',
   aufsicht_mittag: 'zk-aufsicht',
   fruehaufsicht: 'zk-aufsicht',

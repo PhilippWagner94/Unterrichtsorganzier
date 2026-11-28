@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import type { Zeiteintrag } from '../../db/types';
 import { Button, Chip, Empty, Page } from '../../components/ui';
-import { addTage, formatLang, heute, isoWoche } from '../../lib/dates';
+import { addTage, formatLang, heute, isoWoche, wochentag } from '../../lib/dates';
 import { aufgabenAm, verpflichtungenAm, ART_LABEL } from '../../lib/aufgaben';
 import { freiBezeichnung } from '../../lib/plan';
 import { aufgabeZeit, einheitZeit, formatDauer, spanne, toMin } from '../../lib/zeit';
@@ -67,7 +67,7 @@ export default function TagPage() {
         <Button small kind="secondary" onClick={() => nav(`/tag/${addTage(datum, 1)}`, { replace: true })}>Folgetag ›</Button>
       </div>
       {frei ? <Chip kind="gray">{frei}</Chip> : null}
-      {!frei ? <div className="card soft small" style={{ margin: '8px 0', padding: 10 }}>🏫 In der Schule: {einst.schuleVon}–{einst.schuleBis}</div> : null}
+      {!frei && wochentag(datum) <= 5 ? <div className="card soft small" style={{ margin: '8px 0', padding: 10 }}>🏫 In der Schule: {einst.schuleVon}–{einst.schuleBis}</div> : null}
 
       {liste.length === 0 ? <Empty>Für diesen Tag ist nichts eingetragen.</Empty> : (
         <div className="list">

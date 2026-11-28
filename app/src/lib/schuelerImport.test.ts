@@ -9,7 +9,7 @@ describe('Schülerliste einlesen', () => {
     expect(parseDatum('abc')).toBeUndefined();
   });
   it('liest Zeilen mit optionalem Geschlecht und meldet Fehler', () => {
-    const r = parseSchuelerZeilen('Lea; Müller; 04.03.2018; w\nBen;Koch;12.12.2017\n\nOhne Datum;X\nMax; Fehler; 99.99.2018');
+    const r = parseSchuelerZeilen('Müller; Lea; 04.03.2018; w\nKoch;Ben;12.12.2017\n\nOhne Datum;X\nFehler; Max; 99.99.2018');
     expect(r.ok).toEqual([
       { vorname: 'Lea', nachname: 'Müller', geburtsdatum: '2018-03-04', geschlecht: 'w' },
       { vorname: 'Ben', nachname: 'Koch', geburtsdatum: '2017-12-12', geschlecht: undefined },

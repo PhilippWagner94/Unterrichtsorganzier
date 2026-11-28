@@ -32,7 +32,7 @@ const TABS = [
   { to: '/kalender', ico: '📅', label: 'Kalender', end: false },
   { to: '/klassen', ico: '👧', label: 'Klassen', end: false },
   { to: '/bibliothek', ico: '📚', label: 'Bibliothek', end: false },
-  { to: '/mehr', ico: '⚙️', label: 'Mehr', end: false },
+  { to: '/mehr', ico: '☰', label: 'Mehr', end: false },
 ];
 
 export default function App() {

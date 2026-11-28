@@ -9,34 +9,8 @@ import { ART_LABEL, KATEGORIE_LABEL, aufgabenAm, ohneDatum, ueberfaellig, verpfl
 import { aufgabeZeit, spanne } from '../../lib/zeit';
 import { freiBezeichnung } from '../../lib/plan';
 import { AufgabeSheet, type AufgabeVorgabe } from './AufgabeSheet';
-
-const aufgabeZeitText = (a: Aufgabe) => { const t = aufgabeZeit(a); return t ? spanne(t.von, t.bis) : undefined; };
-
-export function AufgabeZeile({ a, onEdit, klassen }: { a: Aufgabe; onEdit: () => void; klassen: Map<string, string> }) {
-  const verpf = a.typ === 'verpflichtung';
-  return (
-    <div className="row" style={{ alignItems: 'flex-start' }}>
-      {!verpf ? (
-        <input
-          type="checkbox"
-          checked={a.erledigt}
-          style={{ width: 24, height: 24, marginRight: 10 }}
-          aria-label="Erledigt"
-          onChange={(e) => db.aufgaben.update(a.id, { erledigt: e.target.checked, erledigtAm: e.target.checked ? heute() : undefined })}
-        />
-      ) : (
-        <span style={{ marginRight: 10 }}>🕒</span>
-      )}
-      <button className="main" onClick={onEdit} style={{ textAlign: 'left', background: 'none', border: 0, padding: 0, color: 'inherit', font: 'inherit' }}>
-        <div className="title" style={a.erledigt ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}>{a.titel}</div>
-        <div className="sub">
-          {[verpf && aufgabeZeitText(a), verpf && a.ort, a.klasseId && klassen.get(a.klasseId) && `Klasse ${klassen.get(a.klasseId)}`, !verpf && a.kategorie && KATEGORIE_LABEL[a.kategorie], a.details].filter(Boolean).join(' · ')}
-        </div>
-      </button>
-      {a.einheitId ? <Link to={`/einheit/${a.einheitId}`} style={{ textDecoration: 'none' }}>📅</Link> : null}
-    </div>
-  );
-}
+import { AufgabeZeile } from './AufgabeZeile';
+import { AufgabenUebersicht } from './Uebersicht';
 
 export default function AufgabenPage() {
   const h = heute();
@@ -69,42 +43,7 @@ export default function AufgabenPage() {
         ))}
       </div>
 
-      {ueber.length ? (
-        <Section title="Überfällig">
-          <div className="list">{ueber.map((a) => <AufgabeZeile key={a.id} a={a} klassen={klassen} onEdit={() => setSheet({ aufgabe: a })} />)}</div>
-        </Section>
-      ) : null}
-
-      {tageListe.map((d) => {
-        const wt = wochentag(d);
-        if (wt === 6 || wt === 7 || wt === 0) {
-          if (!aufgabenAm(alle, d).length && !verpflichtungenAm(alle, d, freieTage).length) return null;
-        }
-        const v = verpflichtungenAm(alle, d, freieTage);
-        const a = aufgabenAm(alle, d);
-        const u = einheiten.filter((e) => e.datum === d && e.status === 'geplant');
-        const frei = freiBezeichnung(d, freieTage);
-        if (!v.length && !a.length && !u.length && !frei) return null;
-        return (
-          <Section key={d} title={`${d === h ? 'Heute · ' : d === addTage(h, 1) ? 'Morgen · ' : ''}${formatLang(d)}`}>
-            {frei ? <Chip kind="gray">{frei}</Chip> : null}
-            <div className="list">
-              {u.map((e) => (
-                <div key={e.id} className="row">
-                  <span style={{ marginRight: 10 }}>🏃</span>
-                  <Link className="main" to={`/einheit/${e.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div className="title">Sport · Klasse {klassen.get(e.klasseId)}</div>
-                    <div className="sub">{e.titel || 'Unterricht'}</div>
-                  </Link>
-                  <Button small kind="secondary" onClick={() => setSheet({ vorgabe: { typ: 'aufgabe', faellig: addTage(d, -1) < h ? h : addTage(d, -1), einheitId: e.id, klasseId: e.klasseId, kategorie: 'vorbereitung', titel: 'Vorbereiten: ' } })}>＋ Vorbereitung</Button>
-                </div>
-              ))}
-              {v.map((x) => <AufgabeZeile key={x.id + d} a={x} klassen={klassen} onEdit={() => setSheet({ aufgabe: x })} />)}
-              {a.map((x) => <AufgabeZeile key={x.id} a={x} klassen={klassen} onEdit={() => setSheet({ aufgabe: x })} />)}
-            </div>
-          </Section>
-        );
-      })}
+      <AufgabenUebersicht tage={tage} />
 
       {ohne.length ? (
         <Section title="Ohne Datum">

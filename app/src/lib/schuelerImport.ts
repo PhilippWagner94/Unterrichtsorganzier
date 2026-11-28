@@ -20,7 +20,7 @@ function parseGeschlecht(text: string | undefined): Geschlecht | undefined {
 }
 
 /**
- * Liest eine Liste von Kindern, eine Zeile pro Kind: `Vorname; Name; TT.MM.JJJJ; w` (Trennzeichen ; oder Tab,
+ * Liest eine Liste von Kindern, eine Zeile pro Kind: `Name; Vorname; TT.MM.JJJJ; w` (Trennzeichen ; oder Tab,
  * Geschlecht optional). Gibt gültige Kinder und Fehlermeldungen pro Zeile zurück.
  */
 export function parseSchuelerZeilen(text: string): { ok: NeuerSchueler[]; fehler: string[] } {
@@ -30,10 +30,10 @@ export function parseSchuelerZeilen(text: string): { ok: NeuerSchueler[]; fehler
     if (!zeile.trim()) return;
     const teile = zeile.split(/[;\t]/).map((t) => t.trim());
     if (teile.length < 3) {
-      fehler.push(`Zeile ${i + 1}: Vorname; Name; Geburtsdatum erwartet`);
+      fehler.push(`Zeile ${i + 1}: Name; Vorname; Geburtsdatum erwartet`);
       return;
     }
-    const [vorname, nachname, datum, g] = teile;
+    const [nachname, vorname, datum, g] = teile;
     const geburtsdatum = parseDatum(datum);
     if (!vorname || !nachname) fehler.push(`Zeile ${i + 1}: Vor- oder Nachname fehlt`);
     else if (!geburtsdatum) fehler.push(`Zeile ${i + 1}: Geburtsdatum „${datum}“ nicht lesbar (TT.MM.JJJJ)`);
@@ -46,7 +46,7 @@ const DATUM_IM_TEXT = /(\d{1,2})\s*[.,]\s*(\d{1,2})\s*[.,]\s*(\d{4})/;
 
 /**
  * Wandelt frei erkannten Text (z. B. aus einem Foto einer Klassenliste) in Zeilen
- * `Vorname; Name; TT.MM.JJJJ; Geschlecht`. Erkennt „Name, Vorname“ und „Vorname Name“, ein
+ * `Name; Vorname; TT.MM.JJJJ; Geschlecht`. Erkennt „Name, Vorname“ und „Vorname Name“, ein
  * Geburtsdatum irgendwo in der Zeile und ein einzelnes w/m/d danach. Führende Nummern („1.“) fallen weg.
  * Zeilen ohne Datum bleiben mit Hinweis stehen, damit man sie von Hand ergänzen kann.
  */
@@ -78,7 +78,7 @@ export function schuelerAusFreitext(text: string): string {
     }
     if (!vor && !nach) continue;
     const g = (danach.match(/\b([wmd])\b/i)?.[1] ?? '').toLowerCase();
-    zeilen.push([vor, nach, datum, g].join('; ').replace(/;\s*$/, '').replace(/;\s*$/, ''));
+    zeilen.push([nach, vor, datum, g].join('; ').replace(/;\s*$/, '').replace(/;\s*$/, ''));
   }
   return zeilen.join('\n');
 }

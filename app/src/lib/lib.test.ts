@@ -291,7 +291,7 @@ import { schuelerAusFreitext, parseSchuelerZeilen } from './schuelerImport';
 describe('Kinderliste aus Foto-Text', () => {
   it('erkennt verschiedene Schreibweisen', () => {
     const t = schuelerAusFreitext('1. Anna Müller 12.03.2018 w\n2) Schmidt, Paul  5.7.2017  m\nLena Weiß 01 . 02 . 2018');
-    expect(t.split('\n')).toEqual(['Anna; Müller; 12.03.2018; w', 'Paul; Schmidt; 05.07.2017; m', 'Lena; Weiß; 01.02.2018']);
+    expect(t.split('\n')).toEqual(['Müller; Anna; 12.03.2018; w', 'Schmidt; Paul; 05.07.2017; m', 'Weiß; Lena; 01.02.2018']);
     expect(parseSchuelerZeilen(t).ok).toHaveLength(3);
   });
 });
@@ -390,5 +390,16 @@ describe('Übernahme aus dem Vorjahr', () => {
     expect(m.get('z1')?.notizen).toContain('Vorjahr: zu eng');
     expect(m.has('z2')).toBe(false);
     expect(m.get('z3')?.hauptteil).toBe('Rolle');
+  });
+});
+
+describe('Mehrtägige Verpflichtung', () => {
+  const f = { id: 'f', typ: 'verpflichtung', titel: 'Fortbildung', details: '', erledigt: false, erstellt: 0, art: 'fortbildung', wiederholung: 'einmalig', faellig: '2026-12-03', bisDatum: '2026-12-08' } as never;
+  it('läuft an Werktagen von bis, nicht am Wochenende', () => {
+    expect(verpflichtungenAm([f], '2026-12-03', [])).toHaveLength(1); // Do
+    expect(verpflichtungenAm([f], '2026-12-04', [])).toHaveLength(1); // Fr
+    expect(verpflichtungenAm([f], '2026-12-05', [])).toHaveLength(0); // Sa
+    expect(verpflichtungenAm([f], '2026-12-08', [])).toHaveLength(1); // Di
+    expect(verpflichtungenAm([f], '2026-12-09', [])).toHaveLength(0);
   });
 });

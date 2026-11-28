@@ -53,6 +53,7 @@ export default function SpielPage() {
         <Button onClick={tagHinzu} disabled={!tagText.trim()}>＋</Button>
       </div>
 
+      <TextArea label="Mögliche Variationen für das Spiel (z. B. Abwandlungen von Regeln, Material, Gruppengröße)" value={s.variationen ?? ''} onChange={(v) => set({ variationen: v })} rows={3} />
       <TextField label="Quelle (z. B. Buchtitel und Seite)" value={s.quelle} onChange={(v) => set({ quelle: v })} />
       <div className="muted small" style={{ marginTop: -8, marginBottom: 12 }}>
         Tipp: Verweise auf Literatur wie „Kleine Spiele“ als Quelle eintragen, die Beschreibung in eigenen Worten schreiben.

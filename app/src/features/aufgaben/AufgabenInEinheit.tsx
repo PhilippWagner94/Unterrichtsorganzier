@@ -5,7 +5,7 @@ import type { Aufgabe, Einheit } from '../../db/types';
 import { Button, Section } from '../../components/ui';
 import { addTage, heute } from '../../lib/dates';
 import { AufgabeSheet } from './AufgabeSheet';
-import { AufgabeZeile } from './AufgabenPage';
+import { AufgabeZeile } from './AufgabeZeile';
 
 /** Vorbereitungs-Aufgaben für genau diese Einheit. */
 export function AufgabenInEinheit({ e }: { e: Einheit }) {

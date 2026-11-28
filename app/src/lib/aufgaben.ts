@@ -3,6 +3,7 @@ import { isoWoche, wochentag } from './dates';
 import { freiBezeichnung } from './plan';
 
 export const ART_LABEL: Record<NonNullable<Aufgabe['art']>, string> = {
+  fortbildung: 'Fortbildung',
   aufsicht_hof: 'Pausenaufsicht Hof',
   aufsicht_mittag: 'Aufsicht Mittagspause',
   fruehaufsicht: 'Frühaufsicht',
@@ -26,7 +27,11 @@ export function verpflichtungenAm(liste: Aufgabe[], datum: Datum, freieTage: Fre
     .filter((a) => a.typ === 'verpflichtung')
     .filter((a) => {
       const w = a.wiederholung ?? 'einmalig';
-      if (w === 'einmalig') return a.faellig === datum;
+      if (w === 'einmalig') {
+        if (!a.faellig) return false;
+        if (!a.bisDatum || a.bisDatum <= a.faellig) return a.faellig === datum;
+        return datum >= a.faellig && datum <= a.bisDatum && wt <= 5; // mehrtägig: nur Werktage
+      }
       if (frei || a.wochentag !== wt) return false;
       if (w === 'zweiwoechentlich') return isoWoche(datum) % 2 === (a.woche === 'gerade' ? 0 : 1);
       return true;

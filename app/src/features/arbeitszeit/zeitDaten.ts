@@ -10,11 +10,9 @@ export const STANDARD_ZEIT: ZeitEinstellungen = { doppelMin: STANDARD_DOPPEL_MIN
 /** Legt die Standard-Kategorien einmalig an (fehlende werden nachgetragen, nichts wird überschrieben). */
 async function ensureKategorien() {
   const vorhanden = new Set((await db.zeitKategorien.toArray()).map((k) => k.id));
+  // Standard-Kategorien lassen sich nicht löschen; fehlende (auch neu hinzugekommene) werden ergänzt
   const neu = STANDARD_KATEGORIEN.map((k, i) => ({ ...k, sortierung: i })).filter((k) => !vorhanden.has(k.id));
-  if (neu.length && !(await getEinstellung('zeitKategorienGeseedet', false))) {
-    await db.zeitKategorien.bulkPut(neu);
-    await setEinstellung('zeitKategorienGeseedet', true);
-  }
+  if (neu.length) await db.zeitKategorien.bulkPut(neu);
 }
 
 export function useZeitKategorien(): ZeitKategorie[] {

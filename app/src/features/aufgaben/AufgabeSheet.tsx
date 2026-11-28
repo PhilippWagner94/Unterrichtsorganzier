@@ -20,13 +20,14 @@ export interface AufgabeVorgabe {
 /** Anlegen oder Bearbeiten einer Aufgabe bzw. Verpflichtung. */
 export function AufgabeSheet({ offen, onClose, aufgabe, vorgabe }: { offen: boolean; onClose: () => void; aufgabe?: Aufgabe; vorgabe?: AufgabeVorgabe }) {
   const [a, setA] = useState<Aufgabe>();
+  const [neueTage, setNeueTage] = useState<number[]>([1]);
   const [kopieTage, setKopieTage] = useState<number[]>([]);
   const [kopieDatum, setKopieDatum] = useState('');
   const [kopiert, setKopiert] = useState('');
 
   useEffect(() => {
     if (!offen) return;
-    setKopieTage([]); setKopieDatum(''); setKopiert('');
+    setKopieTage([]); setKopieDatum(''); setKopiert(''); setNeueTage([aufgabe?.wochentag ?? 1]);
     if (aufgabe) setA(aufgabe);
     else {
       const v = vorgabe ?? { typ: 'aufgabe' as const };
@@ -64,7 +65,12 @@ export function AufgabeSheet({ offen, onClose, aufgabe, vorgabe }: { offen: bool
     if (!a) return;
     const titel = a.titel.trim() || (verpf && a.art ? ART_LABEL[a.art] : '');
     if (!titel) return;
-    await db.aufgaben.put({ ...a, titel });
+    if (!aufgabe && verpf && wdh !== 'einmalig' && neueTage.length > 1) {
+      // mehrere Wochentage auf einmal: je Tag ein eigener Eintrag (einzeln später änderbar)
+      await db.aufgaben.bulkPut(neueTage.map((t, i) => ({ ...a, id: i === 0 ? a.id : neueId(), titel, wochentag: t })));
+    } else {
+      await db.aufgaben.put({ ...a, titel, ...(!aufgabe && verpf && wdh !== 'einmalig' ? { wochentag: neueTage[0] ?? 1 } : {}) });
+    }
     onClose();
   }
 
@@ -73,7 +79,7 @@ export function AufgabeSheet({ offen, onClose, aufgabe, vorgabe }: { offen: bool
       {verpf ? (
         <>
           <div className="muted small">Art</div>
-          <ChipAuswahl optionen={ARTEN} wert={a.art ?? 'sonstiges'} onChange={(v) => set({ art: v })} />
+          <ChipAuswahl optionen={ARTEN} wert={a.art ?? 'sonstiges'} onChange={(v) => set({ art: v, ...(v === 'fortbildung' ? { wiederholung: 'einmalig' as const } : {}) })} />
         </>
       ) : null}
       <TextField label={verpf ? 'Bezeichnung (optional)' : 'Was ist zu tun?'} value={a.titel} onChange={(v) => set({ titel: v })} />
@@ -93,11 +99,22 @@ export function AufgabeSheet({ offen, onClose, aufgabe, vorgabe }: { offen: bool
             onChange={(v) => set({ wiederholung: v })}
           />
           {wdh === 'einmalig' ? (
-            <TextField label="Datum" type="date" value={a.faellig ?? ''} onChange={(v) => set({ faellig: v || undefined })} />
+            <>
+              <TextField label="Datum (bei mehreren Tagen: erster Tag)" type="date" value={a.faellig ?? ''} onChange={(v) => set({ faellig: v || undefined, ...(a.bisDatum && v && a.bisDatum < v ? { bisDatum: undefined } : {}) })} />
+              <TextField label="Letzter Tag (nur bei mehrtägig, z. B. Fortbildung)" type="date" value={a.bisDatum ?? ''} onChange={(v) => set({ bisDatum: v || undefined })} />
+            </>
           ) : (
             <>
-              <div className="muted small">Wochentag</div>
-              <ChipAuswahl optionen={TAGE} wert={a.wochentag ?? 1} onChange={(v) => set({ wochentag: v })} />
+              <div className="muted small">{aufgabe ? 'Wochentag' : 'Wochentage (mehrere möglich)'}</div>
+              {aufgabe ? (
+                <ChipAuswahl optionen={TAGE} wert={a.wochentag ?? 1} onChange={(v) => set({ wochentag: v })} />
+              ) : (
+                <div className="chips">
+                  {TAGE.map((t) => (
+                    <button key={t.value} className={`chip-btn ${neueTage.includes(t.value) ? 'on' : ''}`} onClick={() => setNeueTage(neueTage.includes(t.value) ? (neueTage.length > 1 ? neueTage.filter((x) => x !== t.value) : neueTage) : [...neueTage, t.value].sort())}>{t.label}</button>
+                  ))}
+                </div>
+              )}
               {wdh === 'zweiwoechentlich' ? (
                 <ChipAuswahl optionen={[{ value: 'ungerade' as const, label: 'Ungerade KW' }, { value: 'gerade' as const, label: 'Gerade KW' }]} wert={a.woche ?? 'ungerade'} onChange={(v) => set({ woche: v })} />
               ) : null}

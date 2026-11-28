@@ -10,7 +10,7 @@ export interface Fach {
   eigene?: boolean; // vom Nutzer angelegt (ohne mitgelieferten Lehrplan)
 }
 
-export type VerpflichtungsArt = 'aufsicht_hof' | 'aufsicht_mittag' | 'fruehaufsicht' | 'beratung' | 'elterngespraech' | 'sonstiges';
+export type VerpflichtungsArt = 'fortbildung' | 'aufsicht_hof' | 'aufsicht_mittag' | 'fruehaufsicht' | 'beratung' | 'elterngespraech' | 'sonstiges';
 
 /** Aufgabe (zu erledigen bis …) oder Verpflichtung (Aufsicht, Beratung, Gespräch – einmalig oder wiederkehrend). */
 export interface Aufgabe {
@@ -18,7 +18,8 @@ export interface Aufgabe {
   typ: 'aufgabe' | 'verpflichtung';
   titel: string;
   details: string;
-  faellig?: Datum; // Aufgabe: bis wann; einmalige Verpflichtung: Datum
+  faellig?: Datum; // Aufgabe: bis wann; einmalige Verpflichtung: Datum (bei mehrtägigen: erster Tag)
+  bisDatum?: Datum; // letzter Tag bei mehrtägigen einmaligen Verpflichtungen (z. B. Fortbildung)
   erledigt: boolean;
   erledigtAm?: string;
   einheitId?: ID; // z. B. Vorbereitung für diese Stunde
@@ -174,6 +175,7 @@ export interface Spiel {
   ort: Ort;
   ziele: string[]; // Schlagwörter, z. B. 'Aufwärmen', 'Kooperation'
   quelle: string; // z. B. 'Kleine Spiele, S. 42'
+  variationen?: string; // mögliche Abwandlungen des Spiels
   favorit: boolean;
   erstellt: number;
 }

@@ -153,7 +153,7 @@ export default function FotoPage() {
             </>
           ) : ziel === 'kinder' ? (
             <>
-              <TextArea label="Kinder: eine Zeile pro Kind (Vorname; Name; TT.MM.JJJJ; w/m/d)" value={kinderText} onChange={setKinderText} rows={14} />
+              <TextArea label="Kinder: eine Zeile pro Kind (Name; Vorname; TT.MM.JJJJ; w/m/d)" value={kinderText} onChange={setKinderText} rows={14} />
               <Card kind="soft">
                 <strong>{kinderVorschau.ok.length} Kinder erkannt.</strong>
                 {kinderVorschau.fehler.map((f) => <div key={f} className="err small">{f}</div>)}

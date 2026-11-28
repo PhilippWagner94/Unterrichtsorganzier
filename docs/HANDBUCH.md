@@ -56,7 +56,7 @@ Allgemeine Bedienung:
 
 - Die **Klassenstufe** wird nicht gespeichert, sondern aus dem Einschulungsjahr berechnet. Nach jedem Schuljahreswechsel rückt sie automatisch auf.
 - Kinder anlegen: einzeln („＋ Kind") mit Vorname, Name, Geburtsdatum und optional Geschlecht, Hinweisen (Allergien, Förderbedarf).
-- **Liste einfügen:** Mehrere Kinder auf einmal, eine Zeile pro Kind im Format `Vorname; Name; TT.MM.JJJJ; w/m/d`.
+- **Liste einfügen:** Mehrere Kinder auf einmal, eine Zeile pro Kind im Format `Name; Vorname; TT.MM.JJJJ; w/m/d`.
 - **Aus Foto:** Foto einer Klassenliste machen, Text prüfen und korrigieren, Kinder übernehmen. Das Foto wird nicht gespeichert.
 - **Klassenwechsel:** Kind antippen, bei „Klasse" die neue Klasse wählen, speichern. Noten bleiben beim Kind.
 - **Dauerhaft nicht bewertbar** (z. B. Langzeiterkrankung): Haken auf der Seite des Kindes. Das Kind erscheint dann nie in offenen Noten.

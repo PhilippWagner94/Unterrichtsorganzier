@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getEinstellung, neueId, setEinstellung } from '../../db/db';
 import type { Zeiteintrag } from '../../db/types';
 import { Button, Card, Chip, ChipAuswahl, Empty, Page, Section, TextField, bestaetige } from '../../components/ui';
-import { addTage, formatLang, heute } from '../../lib/dates';
+import { addTage, formatLang, heute, wochentag } from '../../lib/dates';
 import { KATEGORIE_FUER_ART, minuten, summe } from '../../lib/arbeitszeit';
 import { dauerMin, einheitZeit, fromMin, aufgabeZeit, formatDauer } from '../../lib/zeit';
 import { verpflichtungenAm } from '../../lib/aufgaben';
@@ -33,6 +33,21 @@ export default function ArbeitszeitPage() {
   const [sheet, setSheet] = useState<{ eintrag?: Zeiteintrag } | null>(null);
   const [neueKat, setNeueKat] = useState('');
   const [msg, setMsg] = useState('');
+  const [abArt, setAbArt] = useState('zk-urlaub');
+  const [abVon, setAbVon] = useState('');
+  const [abBis, setAbBis] = useState('');
+
+  async function eintragenAbwesenheit() {
+    const neu: Zeiteintrag[] = [];
+    for (let d = abVon; d <= abBis && neu.length < 400; d = addTage(d, 1)) {
+      if (wochentag(d) > 5) continue;
+      neu.push({ id: neueId(), datum: d, von: einst.schuleVon, bis: einst.schuleBis, kategorieId: abArt, notiz: '', erstellt: Date.now() });
+    }
+    if (!neu.length) { setMsg('Im gewählten Zeitraum liegen keine Werktage.'); return; }
+    await db.zeiten.bulkAdd(neu);
+    setMsg(`${neu.length} Tage eingetragen.`);
+    setAbVon(''); setAbBis('');
+  }
   const kName = (id: string) => kategorien.find((k) => k.id === id)?.name ?? 'Gelöscht';
 
   useEffect(() => {
@@ -131,6 +146,17 @@ export default function ArbeitszeitPage() {
           <div style={{ textAlign: 'right', marginTop: 6 }}><strong>Summe: {formatDauer(summe(eintraege))}</strong></div>
         </>
       )}
+
+      <Section title="Urlaub / Krank eintragen" />
+      <Card>
+        <ChipAuswahl optionen={[{ value: 'zk-urlaub', label: 'Urlaub' }, { value: 'zk-krank', label: 'Krank' }]} wert={abArt} onChange={setAbArt} />
+        <div className="grid2">
+          <TextField label="Von" type="date" value={abVon} onChange={(v) => { setAbVon(v); if (!abBis || abBis < v) setAbBis(v); }} />
+          <TextField label="Bis" type="date" value={abBis} onChange={setAbBis} />
+        </div>
+        <Button disabled={!abVon || !abBis || abBis < abVon} onClick={eintragenAbwesenheit}>Eintragen (Mo–Fr)</Button>
+        <div className="muted small">Je Werktag ein Eintrag mit deiner Schulzeit ({einst.schuleVon}–{einst.schuleBis}). Urlaub und Krank zählen nicht zur Arbeitszeit, sondern erscheinen in der Statistik als Tage.</div>
+      </Card>
 
       <Section title="Einstellungen" />
       <Card>

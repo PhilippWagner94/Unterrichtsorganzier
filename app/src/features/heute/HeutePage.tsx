@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
@@ -9,7 +10,7 @@ import { freiBezeichnung } from '../../lib/plan';
 import { planNeuVerteilen } from '../../lib/planAktionen';
 import { letztesBackup } from '../../db/backup';
 import type { Einheit } from '../../db/types';
-import { aufgabenAm, ueberfaellig, verpflichtungenAm } from '../../lib/aufgaben';
+import { AufgabenUebersicht, ZEITRAEUME } from '../aufgaben/Uebersicht';
 import { aufgabeZeit, einheitZeit, spanne } from '../../lib/zeit';
 import { offeneTests } from '../../lib/offeneTests';
 import { vollerName } from '../../lib/schuljahr';
@@ -31,10 +32,8 @@ export default function HeutePage() {
   const ergebnisse = useLiveQuery(() => db.testergebnisse.toArray(), [], []) ?? [];
   const aktiv = aktiveKlassen(klassen, sj);
   const offen = offeneTests(einheiten.filter((e) => aktiv.some((a) => a.klasse.id === e.klasseId)), tests, alleSchueler, ergebnisse, h);
-  const aufgaben = useLiveQuery(() => db.aufgaben.toArray(), [], []) ?? [];
-  const aufHeute = [...ueberfaellig(aufgaben, h), ...aufgabenAm(aufgaben, h)];
-  const aufMorgen = aufgabenAm(aufgaben, addTage(h, 1));
-  const verpfHeute = verpflichtungenAm(aufgaben, h, freieTage);
+  const [tage, setTage] = useState(() => { try { return Number(localStorage.getItem('heuteTage') ?? 3); } catch { return 3; } });
+  const aendereTage = (n: number) => { setTage(n); try { localStorage.setItem('heuteTage', String(n)); } catch { /* egal */ } };
   const klasseName = (id: string) => klassen.find((k) => k.id === id)?.name ?? '';
   const lbName = (e: Einheit) => (e.istPuffer ? 'Pufferstunde' : lernbereiche.find((l) => l.id === e.lernbereichId)?.name ?? '');
   const heutige = einheiten.filter((e) => e.datum === h && aktiv.some((a) => a.klasse.id === e.klasseId));
@@ -59,19 +58,16 @@ export default function HeutePage() {
         </Card>
       ) : null}
 
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <strong>Aufgaben und Termine</strong>
-          <span style={{ display: 'flex', gap: 6 }}>
-            <Link className="btn small secondary" to={`/tag/${h}`} style={{ textDecoration: 'none' }}>Tagesplan</Link>
-            <Link className="btn small secondary" to="/aufgaben" style={{ textDecoration: 'none' }}>Aufgaben</Link>
-          </span>
+      <Section title="Tagesordnung und Aufgaben">
+        <div className="chips">
+          {ZEITRAEUME.map(([n, l]) => (
+            <button key={n} className={`chip-btn ${tage === n ? 'on' : ''}`} onClick={() => aendereTage(n)}>{l}</button>
+          ))}
+          <Link className="chip-btn" to={`/tag/${h}`} style={{ textDecoration: 'none' }}>Tagesplan</Link>
+          <Link className="chip-btn" to="/aufgaben" style={{ textDecoration: 'none' }}>Alle Aufgaben</Link>
         </div>
-        {verpfHeute.map((v) => <div key={v.id} className="small">🕒 {(() => { const t = aufgabeZeit(v); return t ? spanne(t.von, t.bis) + ' · ' : ''; })()}{v.titel}{v.ort ? ` (${v.ort})` : ''}</div>)}
-        {aufHeute.map((a) => <div key={a.id} className="small">☐ {a.titel}{a.faellig && a.faellig < h ? ' (überfällig)' : ''}</div>)}
-        {aufMorgen.length ? <div className="muted small">Morgen fällig: {aufMorgen.map((a) => a.titel).join(', ')}</div> : null}
-        {!verpfHeute.length && !aufHeute.length && !aufMorgen.length ? <div className="muted small">Heute nichts Offenes.</div> : null}
-      </Card>
+      </Section>
+      <AufgabenUebersicht tage={tage} />
 
       {offen.length ? (
         <Section title="Noten noch offen">
