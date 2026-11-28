@@ -8,6 +8,7 @@ const TYP_LABEL = { messwert: 'Messwert', note: 'Note', verbal: 'Verbal', punkte
 export default function TestsPage() {
   const nav = useNavigate();
   const tests = useLiveQuery(() => db.tests.toArray(), [], []) ?? [];
+  const lbs = useLiveQuery(() => db.lernbereiche.toArray(), [], []) ?? [];
   const anzahl = useLiveQuery(async () => {
     const m = new Map<string, number>();
     for (const e of await db.testergebnisse.toArray()) m.set(e.testId, (m.get(e.testId) ?? 0) + 1);
@@ -25,7 +26,7 @@ export default function TestsPage() {
       {tests.length === 0 ? <Empty>Noch keine Tests.</Empty> : (
         <List>
           {[...tests].sort((a, b) => a.name.localeCompare(b.name, 'de')).map((t) => (
-            <Row key={t.id} to={`/test/${t.id}`} title={t.name} sub={`${TYP_LABEL[t.typ]}${t.einheit ? ' · ' + t.einheit : ''} · ${anzahl?.get(t.id) ?? 0} Ergebnisse`} />
+            <Row key={t.id} to={`/test/${t.id}`} title={t.name} sub={`${lbs.find((l) => l.id === t.lernbereichId)?.kuerzel ? lbs.find((l) => l.id === t.lernbereichId)!.kuerzel + ' · ' : ''}${TYP_LABEL[t.typ]}${t.einheit ? ' · ' + t.einheit : ''} · ${anzahl?.get(t.id) ?? 0} Ergebnisse`} />
           ))}
         </List>
       )}

@@ -80,6 +80,17 @@ export async function seedBeiBedarf(): Promise<void> {
   );
 }
 
+/** Einmalige Ergänzungen für bestehende Installationen (ohne bearbeitete oder gelöschte Einträge erneut anzulegen). */
+export async function ergaenzungenAnwenden(): Promise<void> {
+  if (await getEinstellung<boolean>('ergaenzung-basistests', false)) return;
+  const { lernbereiche, lernziele } = lehrplanZeilen();
+  await db.transaction('rw', [db.lernbereiche, db.lernziele, db.einstellungen], async () => {
+    for (const lb of lernbereiche.filter((l) => l.id === 'lb-bt')) if (!(await db.lernbereiche.get(lb.id))) await db.lernbereiche.put(lb);
+    for (const lz of lernziele.filter((l) => l.lernbereichId === 'lb-bt')) if (!(await db.lernziele.get(lz.id))) await db.lernziele.put(lz);
+    await setEinstellung('ergaenzung-basistests', true);
+  });
+}
+
 /** Fehlende Lehrplan-Einträge wieder anlegen (vorhandene und bearbeitete bleiben unverändert). */
 export async function lehrplanNachladen(): Promise<number> {
   const { fach, lernbereiche, lernziele } = lehrplanZeilen();

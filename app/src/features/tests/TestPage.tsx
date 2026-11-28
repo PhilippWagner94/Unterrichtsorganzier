@@ -7,6 +7,7 @@ import type { BewertungsZeile, Geschlecht, TestTyp } from '../../db/types';
 import {
   Button, Card, ChipAuswahl, Empty, Field, List, NumberField, Page, Section, SelectField, TextArea, TextField, bestaetige, parseDezimal, useToast,
 } from '../../components/ui';
+import { Anhaenge } from '../../components/Anhaenge';
 import { useAutosave } from '../../lib/useAutosave';
 import { bestleistung, formatNote, noteFuerWert } from '../../lib/noten';
 import { heute } from '../../lib/dates';
@@ -41,6 +42,7 @@ export default function TestPage() {
   const [toast, zeigeToast] = useToast();
 
   const kinder = useLiveQuery(() => (klasseId ? db.schueler.where('klasseId').equals(klasseId).toArray() : []), [klasseId], []) ?? [];
+  const lernbereiche = useLiveQuery(() => db.lernbereiche.toArray().then((l) => l.filter((x) => x.aktiv).sort((a, b) => a.sortierung - b.sortierung)), [], []) ?? [];
   const ergebnisse = useLiveQuery(() => db.testergebnisse.where('testId').equals(id).toArray(), [id], []) ?? [];
 
   useEffect(() => {
@@ -106,7 +108,10 @@ export default function TestPage() {
           />
         </>
       ) : null}
+      <SelectField label="Lernbereich" value={t.lernbereichId ?? ''} onChange={(v) => set({ lernbereichId: v || undefined })} options={[{ value: '', label: '– keiner –' }, ...lernbereiche.map((l) => ({ value: l.id, label: l.name }))]} />
       <TextArea label="Beschreibung" value={t.beschreibung} onChange={(v) => set({ beschreibung: v })} />
+      <div className="muted small">Bewertungstabelle als Dokument (z. B. PDF) ablegen</div>
+      <Anhaenge bezugTyp="test" bezugId={t.id} />
 
       {mitWert ? (
         <>
@@ -183,6 +188,7 @@ export default function TestPage() {
             if (!bestaetige(`Test „${t.name}“ samt allen Ergebnissen löschen?`)) return;
             await flush();
             await db.testergebnisse.where('testId').equals(t.id).delete();
+            await db.anhaenge.where('[bezugTyp+bezugId]').equals(['test', t.id]).delete();
             await db.tests.delete(t.id);
             nav(-1);
           }}

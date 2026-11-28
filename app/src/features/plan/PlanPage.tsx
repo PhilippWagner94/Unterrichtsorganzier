@@ -4,11 +4,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, neueId } from '../../db/db';
 import { stufeIm, useAktivesSchuljahr } from '../../db/hooks';
 import type { Einheit, PlanBlock } from '../../db/types';
-import { Balken, Button, Card, Chip, Empty, List, Page, Row, Section, SelectField, Sheet, useToast, bestaetige } from '../../components/ui';
+import { Balken, Button, Card, Chip, Empty, List, Page, Row, Section, SelectField, Sheet, TextField, useToast, bestaetige } from '../../components/ui';
 import { fehlendeEinheiten, veralteteEinheiten, offenePuffer, verteile, zaehleUstd } from '../../lib/plan';
 import { planNeuVerteilen } from '../../lib/planAktionen';
 import { formatKurz, formatLang } from '../../lib/dates';
 import { planeUebernahme } from '../../lib/uebernahme';
+import { FACH_SPORT_ID } from '../../data/lehrplanSport';
 import { grobplanFuer } from '../../data/grobplan';
 
 const STATUS_LABEL: Record<Einheit['status'], string> = {
@@ -61,6 +62,9 @@ export default function PlanPage() {
   const [neu, setNeu] = useState(false);
   const [neuLb, setNeuLb] = useState('puffer');
   const [neuAnzahl, setNeuAnzahl] = useState(4);
+  const [neuName, setNeuName] = useState('');
+  const [neueKat, setNeueKat] = useState('');
+  const [bearbeitenId, setBearbeitenId] = useState<string | null>(null);
   const [alleTermine, setAlleTermine] = useState(false);
   const [toast, zeigeToast] = useToast();
 
@@ -108,7 +112,7 @@ export default function PlanPage() {
     const vorschlag = grobplanFuer(stufe, einheiten.filter((e) => e.status !== 'ausfall').length || 25)
       .filter((b) => b.lernbereichId === null || lbIds.has(b.lernbereichId));
     await db.planBloecke.bulkAdd(
-      vorschlag.map((b, i) => ({ id: neueId(), klasseId: klasse.id, schuljahrId: sj.id, lernbereichId: b.lernbereichId, titel: b.hinweis, anzahl: b.anzahl, sortierung: i + 1 })),
+      vorschlag.map((b, i) => ({ id: neueId(), klasseId: klasse.id, schuljahrId: sj.id, lernbereichId: b.lernbereichId, hinweis: b.hinweis, anzahl: b.anzahl, sortierung: i + 1 })),
     );
     await planNeuVerteilen(klasse.id, sj.id);
     zeigeToast('Vorschlag übernommen, du kannst alles ändern');
@@ -122,17 +126,38 @@ export default function PlanPage() {
 
   async function blockAnlegen() {
     if (!klasse || !sj) return;
-    const sort = bloecke.length ? Math.max(...bloecke.map((b) => b.sortierung)) + 1 : 1;
-    await db.planBloecke.add({
-      id: neueId(),
-      klasseId: klasse.id,
-      schuljahrId: sj.id,
-      lernbereichId: neuLb === 'puffer' ? null : neuLb,
-      anzahl: neuAnzahl,
-      sortierung: sort,
-    });
+    let lbId: string | null = neuLb === 'puffer' ? null : neuLb;
+    if (neuLb === 'neu') {
+      const name = neueKat.trim();
+      if (!name) { zeigeToast('Bitte einen Namen für die neue Kategorie eingeben'); return; }
+      lbId = neueId();
+      await db.lernbereiche.add({
+        id: lbId, fachId: FACH_SPORT_ID, name, kuerzel: name.slice(0, 2).toUpperCase(),
+        richtwertMin: 0, richtwertMax: 0, art: 'optional', aktiv: true, farbe: '#7f8c8d',
+        sortierung: Math.max(0, ...lernbereiche.map((l) => l.sortierung)) + 1,
+      });
+    }
+    const titel = neuName.trim() || undefined;
+    if (bearbeitenId) {
+      await db.planBloecke.update(bearbeitenId, { lernbereichId: lbId, titel, anzahl: neuAnzahl });
+    } else {
+      const sort = bloecke.length ? Math.max(...bloecke.map((b) => b.sortierung)) + 1 : 1;
+      await db.planBloecke.add({
+        id: neueId(), klasseId: klasse.id, schuljahrId: sj.id, lernbereichId: lbId, titel, anzahl: neuAnzahl, sortierung: sort,
+      });
+    }
     setNeu(false);
+    setBearbeitenId(null);
     await planNeuVerteilen(klasse.id, sj.id);
+  }
+
+  function blockBearbeiten(b: PlanBlock) {
+    setBearbeitenId(b.id);
+    setNeuLb(b.lernbereichId ?? 'puffer');
+    setNeuAnzahl(b.anzahl);
+    setNeuName(b.titel ?? '');
+    setNeueKat('');
+    setNeu(true);
   }
 
   async function anzahlAendern(b: PlanBlock, delta: number) {
@@ -157,7 +182,7 @@ export default function PlanPage() {
   }
 
   const aktiveLb = lernbereiche.filter((l) => l.aktiv);
-  const optionen = [{ value: 'puffer', label: 'Pufferstunden' }, ...aktiveLb.map((l) => ({ value: l.id, label: l.name }))];
+  const optionen = [{ value: 'puffer', label: 'Pufferstunden' }, ...aktiveLb.map((l) => ({ value: l.id, label: l.name })), { value: 'neu', label: '＋ Neue Kategorie …' }];
   const sichtbareTermine = alleTermine ? einheiten : einheiten.filter((e) => e.status !== 'gehalten').slice(0, 12);
 
   return (
@@ -202,7 +227,7 @@ export default function PlanPage() {
         </Card>
       )}
 
-      <Section title="Reihenfolge der Lernbereiche" aktion={<Button small onClick={() => setNeu(true)}>＋ Block</Button>}>
+      <Section title="Reihenfolge der Lernbereiche" aktion={<Button small onClick={() => { setBearbeitenId(null); setNeuName(''); setNeueKat(''); setNeu(true); }}>＋ Block</Button>}>
         {einheiten.length > 0 ? (
           <Card kind="soft">
             <div className="small">Grobfahrplan für Klasse {stufe ?? ''}: ein Vorschlag, welcher Lernbereich wann dran ist (Draußen im Herbst und Frühjahr, Turnen und Gymnastik im Winter). Alles bleibt änderbar.</div>
@@ -233,10 +258,10 @@ export default function PlanPage() {
                       ) : (
                         <span>⏸ </span>
                       )}
-                      {lb ? lb.name : 'Pufferstunden'}
+                      {b.titel || (lb ? lb.name : 'Pufferstunden')}
                     </div>
                     <div className="sub">
-                      {von ? `${formatKurz(von)} – ${formatKurz(bis!)}` : 'noch ohne Termin'}{b.titel ? ` · ${b.titel}` : ''}
+                      {von ? `${formatKurz(von)} – ${formatKurz(bis!)}` : 'noch ohne Termin'}{b.titel ? ` · ${lb ? lb.name : 'Pufferstunden'}` : ''}{b.hinweis ? ` · ${b.hinweis}` : ''}
                     </div>
                     <div className="btn-row">
                       <Button small kind="secondary" onClick={() => anzahlAendern(b, -1)}>−</Button>
@@ -247,6 +272,7 @@ export default function PlanPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <Button small kind="secondary" onClick={() => verschieben(i, -1)} disabled={i === 0}>▲</Button>
                     <Button small kind="secondary" onClick={() => verschieben(i, 1)} disabled={i === bloecke.length - 1}>▼</Button>
+                    <Button small kind="secondary" onClick={() => blockBearbeiten(b)}>✎</Button>
                     <Button small kind="danger" onClick={() => blockLoeschen(b)}>✕</Button>
                   </div>
                 </div>
@@ -327,8 +353,10 @@ export default function PlanPage() {
         </div>
       </Sheet>
 
-      <Sheet offen={neu} onClose={() => setNeu(false)} titel="Block hinzufügen">
+      <Sheet offen={neu} onClose={() => { setNeu(false); setBearbeitenId(null); }} titel={bearbeitenId ? 'Block bearbeiten' : 'Block hinzufügen'}>
+        <TextField label="Name des Blocks (optional)" value={neuName} onChange={setNeuName} placeholder="z. B. Weitsprung-Block" />
         <SelectField label="Lernbereich" value={neuLb} onChange={(v) => { setNeuLb(v); setNeuAnzahl(v === 'puffer' ? 1 : 4); }} options={optionen} />
+        {neuLb === 'neu' && <TextField label="Name der neuen Kategorie" value={neueKat} onChange={setNeueKat} placeholder="z. B. Sportfest-Vorbereitung" />}
         <div className="muted small">Anzahl Einheiten (Doppelstunden)</div>
         <div className="btn-row">
           <Button kind="secondary" onClick={() => setNeuAnzahl(Math.max(1, neuAnzahl - 1))}>−</Button>
@@ -336,8 +364,8 @@ export default function PlanPage() {
           <Button kind="secondary" onClick={() => setNeuAnzahl(neuAnzahl + 1)}>＋</Button>
         </div>
         <div className="btn-row">
-          <Button onClick={blockAnlegen}>Hinzufügen</Button>
-          <Button kind="secondary" onClick={() => setNeu(false)}>Abbrechen</Button>
+          <Button onClick={blockAnlegen}>{bearbeitenId ? 'Speichern' : 'Hinzufügen'}</Button>
+          <Button kind="secondary" onClick={() => { setNeu(false); setBearbeitenId(null); }}>Abbrechen</Button>
         </div>
       </Sheet>
       {toast}

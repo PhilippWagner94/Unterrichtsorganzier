@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
@@ -16,6 +16,8 @@ export default function KalenderPage() {
   const h = heute();
   const [monat, setMonat] = useState(() => ({ j: fromYmd(h).getFullYear(), m: fromYmd(h).getMonth() }));
   const [tag, setTag] = useState<string | null>(null);
+  const [monatWahl, setMonatWahl] = useState(false);
+  const touch = useRef<{ x: number; y: number } | null>(null);
   const sj = useAktivesSchuljahr();
   const schuljahre = useSchuljahre();
   const einheiten = useLiveQuery(() => db.einheiten.toArray(), [], []) ?? [];
@@ -45,6 +47,18 @@ export default function KalenderPage() {
     setMonat({ j: x.getFullYear(), m: x.getMonth() });
   }
 
+  function wischStart(e: React.TouchEvent) {
+    touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+  function wischEnde(e: React.TouchEvent) {
+    const s = touch.current;
+    touch.current = null;
+    if (!s) return;
+    const dx = e.changedTouches[0].clientX - s.x;
+    const dy = e.changedTouches[0].clientY - s.y;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) verschiebeMonat(dx < 0 ? 1 : -1);
+  }
+
   const tagEinheiten = tag ? proTag.get(tag) ?? [] : [];
   const tagWk = tag ? wettkaempfe.filter((w) => w.datum === tag) : [];
   const tagFrei = tag ? freiBezeichnung(tag, freieTage) : undefined;
@@ -62,7 +76,7 @@ export default function KalenderPage() {
 
   return (
     <Page
-      title={`${monatName(monat.m)} ${monat.j}`}
+      title={<button style={{ font: 'inherit', background: 'none', border: 'none', color: 'inherit', padding: 0 }} onClick={() => setMonatWahl(true)} aria-label="Monat auswählen">{monatName(monat.m)} {monat.j} ▾</button>}
       aktion={
         <span style={{ display: 'flex' }}>
           <button onClick={() => verschiebeMonat(-1)} aria-label="Vorheriger Monat">‹</button>
@@ -71,7 +85,7 @@ export default function KalenderPage() {
         </span>
       }
     >
-      <div className="cal-grid">
+      <div className="cal-grid" onTouchStart={wischStart} onTouchEnd={wischEnde}>
         {KOPF.map((k) => <div key={k} className="cal-head">{k}</div>)}
         {zellen.map((d) => {
           const dd = fromYmd(d);
@@ -97,6 +111,21 @@ export default function KalenderPage() {
       <div className="muted small" style={{ marginTop: 8 }}>
         Grau = Ferien/frei, grün = gehalten, rot = Ausfall, 🏆 = Wettkampf. Tippe auf einen Tag für Details.
       </div>
+
+      <Sheet offen={monatWahl} onClose={() => setMonatWahl(false)} titel="Monat auswählen">
+        <div className="btn-row">
+          <Button small kind="secondary" onClick={() => setMonat({ ...monat, j: monat.j - 1 })}>‹</Button>
+          <span style={{ alignSelf: 'center', minWidth: 60, textAlign: 'center', fontSize: 18 }}>{monat.j}</span>
+          <Button small kind="secondary" onClick={() => setMonat({ ...monat, j: monat.j + 1 })}>›</Button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {Array.from({ length: 12 }, (_, m) => (
+            <Button key={m} kind={m === monat.m ? undefined : 'secondary'} onClick={() => { setMonat({ j: monat.j, m }); setMonatWahl(false); }}>
+              {monatName(m).slice(0, 3)}
+            </Button>
+          ))}
+        </div>
+      </Sheet>
 
       <Sheet offen={tag !== null} onClose={() => setTag(null)} titel={tag ? `${formatLang(tag)} · KW ${isoWoche(tag)}` : ''}>
         {tagFrei ? <div className="chip gray">{tagFrei}</div> : null}

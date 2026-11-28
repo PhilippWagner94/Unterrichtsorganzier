@@ -111,7 +111,8 @@ export interface PlanBlock {
   klasseId: ID;
   schuljahrId: ID;
   lernbereichId: ID | null; // null = Pufferblock
-  titel?: string;
+  titel?: string; // eigener Name des Blocks
+  hinweis?: string; // Vorschlagstext aus dem Grobfahrplan
   anzahl: number; // Anzahl Einheiten (Doppelstunden)
   sortierung: number;
 }
@@ -212,6 +213,7 @@ export interface Test {
   richtung: 'min' | 'max'; // 'min': kleiner ist besser, 'max': größer ist besser
   tabelle: BewertungsZeile[];
   beschreibung: string;
+  lernbereichId?: ID; // Lernbereich, zu dem der Test gehört
 }
 
 export interface Testergebnis {
@@ -250,7 +252,7 @@ export interface Notiz {
 
 export interface Anhang {
   id: ID;
-  bezugTyp: 'spiel' | 'reihe' | 'einheit' | 'notiz' | 'wettkampf' | 'foto';
+  bezugTyp: 'spiel' | 'reihe' | 'einheit' | 'notiz' | 'wettkampf' | 'foto' | 'test' | 'material';
   bezugId: ID | null;
   name: string;
   mime: string;

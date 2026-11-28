@@ -8,7 +8,7 @@ export function Page({
   aktion,
   children,
 }: {
-  title: string;
+  title: ReactNode;
   zurueck?: boolean | string;
   aktion?: ReactNode;
   children: ReactNode;

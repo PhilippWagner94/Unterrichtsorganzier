@@ -24,6 +24,7 @@ export const LERNBEREICHE: LernbereichVorlage[] = [
   { key: 'gt', name: 'Gymnastisch-tänzerische Übungen', kuerzel: 'GT', richtwertMin: 5, richtwertMax: 10, art: 'pflicht', aktiv: true, farbe: '#d35480' },
   { key: 'ws', name: 'Wintersport (oder Eislauf)', kuerzel: 'WS', richtwertMin: 5, richtwertMax: 9, art: 'optional', aktiv: true, farbe: '#16a0b8' },
   { key: 'sw', name: 'Schwimmen (läuft separat)', kuerzel: 'SW', richtwertMin: 35, richtwertMax: 35, art: 'optional', aktiv: false, farbe: '#2471a3' },
+  { key: 'bt', name: 'Motorische Basistests', kuerzel: 'MB', richtwertMin: 0, richtwertMax: 0, art: 'optional', aktiv: true, farbe: '#c0392b' },
   { key: 'wb1', name: 'Wahlbereich: Bewegung in der Natur', kuerzel: 'W1', richtwertMin: 4, richtwertMax: 4, art: 'wahl', aktiv: true, farbe: '#27ae60' },
   { key: 'wb2', name: 'Wahlbereich: Mini-Sportspiele', kuerzel: 'W2', richtwertMin: 4, richtwertMax: 4, art: 'wahl', aktiv: true, farbe: '#27ae60' },
   { key: 'wb3', name: 'Wahlbereich: Kleine Rückenschule', kuerzel: 'W3', richtwertMin: 4, richtwertMax: 4, art: 'wahl', aktiv: true, farbe: '#27ae60' },
@@ -122,3 +123,9 @@ export const LERNZIELE: LernzielVorlage[] = [
   z('wb4', '3/4', 'Üben von olympischen Disziplinen: Sommer- bzw. Wintermehrkampf, Klassen- oder Schulolympiade'),
   z('wb5', '1/2', 'Verbessern koordinativer Fähigkeiten: Gleichgewicht, Rhythmus, räumliche Orientierung, Reaktion, kinästhetische Differenzierung'),
 ];
+
+// Eigene Ergänzung (kein Lehrplanbestandteil): Motorische Basistests, in jeder Klassenstufe
+LERNZIELE.push(
+  z('bt', '1/2', 'Verbessern der Kraftfähigkeiten'),
+  z('bt', '3/4', 'Verbessern der Kraftfähigkeiten'),
+);
