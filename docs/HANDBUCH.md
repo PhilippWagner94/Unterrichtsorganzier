@@ -96,11 +96,18 @@ Allgemeine Bedienung:
 
 Bei **Vertretung** (jemand anderes hält die Stunde) kannst du eine Notiz hinterlassen. Ausfall und Vertretung bleiben nachvollziehbar.
 
+### Neu im Jahresplan
+- **Blöcke benennen und zuordnen:** Beim Hinzufügen (＋ Block) oder über ✎ lässt sich jedem Block ein eigener Name geben und eine Kategorie (Lernbereich) zuweisen. Unter „＋ Neue Kategorie …“ legst du direkt eine eigene Kategorie an. Der Vorschlagstext des Grobfahrplans bleibt als Hinweis erhalten.
+- **Motorische Basistests:** Neue Kategorie, gehört zum Lernziel „Verbessern der Kraftfähigkeiten“ (Klasse 1/2 und 3/4). Bei bestehenden Installationen wird sie einmalig ergänzt.
+- **Anwesenheit und Fehlverhalten:** Nach jeder Stunde erscheint auf „Heute“ (automatisch beim Öffnen, sobald die Stunde vorbei ist) die Namensliste: da / krank geschrieben / fehlend. Bei anwesenden Kindern lässt sich „Fehlverhalten: ja“ wählen, mit Vorauswahl und Freitext. In der Folgestunde erscheint ein Hinweis in der Einheit und auf „Heute“. Du erreichst die Liste auch jederzeit in der Einheit.
+
 ## 7. Kalender und Tagesplan
 
 - **Kalender:** Monatsansicht mit den Einheiten, Ferien (grau), Ausfällen (rot), gehaltenen Stunden (grün) und Wettkämpfen (🏆). Tipp auf einen Tag zeigt Details und erlaubt „Einheit hinzufügen" für eine Klasse.
 - **Tagesplan mit Uhrzeiten** (Knopf im Tag oder auf „Heute"): Oben deine Schulzeit, darunter nach Uhrzeit sortiert Unterricht, Aufsichten, Termine, Wettkämpfe, erfasste Vor- und Nachbereitung und fällige Aufgaben. Mit „‹ Vortag" / „Folgetag ›" blätterst du.
 - Uhrzeiten der Stunden kommen vom Beginn der Klasse plus Länge einer Doppelstunde (Standard 90 Minuten, einstellbar unter Mehr → Arbeitszeit).
+
+**Kalender:** Tippe auf den Monatsnamen, um einen Monat direkt zu wählen. Nach links/rechts wischen wechselt den Monat.
 
 ## 8. Bibliothek: Spiele, Reihen, Notizen
 
@@ -125,9 +132,13 @@ Bei **Vertretung** (jemand anderes hält die Stunde) kannst du eine Notiz hinter
 - Fehlende Kinder erscheinen auf **Heute** unter „Noten noch offen", bis ein Ergebnis erfasst ist. Ein später erfasstes Ergebnis erledigt es automatisch.
 - Damit sich nichts aufstaut: „nicht nachholen" pro Kind, „Alles abschließen" pro Test, oder bei dem Kind „Dauerhaft nicht bewertbar".
 
+**Bibliothek → Reiter „Material“:** Inventarliste nach Kategorien mit Haken „haben wir“. Fehlt etwas, legst du über ✎ eine verknüpfte Aufgabe an („beschaffen“ oder „selbst erstellen“). **Spiele:** Feld „Mögliche Variationen“. **Dokumente:** Bei Fotos und Anhängen lassen sich auch PDF-, Word- und Excel-Dateien (bis 20 MB) ablegen; bei Tests dient das z. B. für die Bewertungstabelle. Tests lassen sich einem Lernbereich zuordnen.
+
 ## 10. Wettkampftermine
 
 Mehr → Wettkampftermine: Einzelne Termine mit Name, Datum, Ort, Notizen, betroffenen Klassenstufen, Teilnahme **mit Kindern** (Auswahl je Klasse) oder **nur Lehrkraft**, Checkliste (Anmeldung, Einverständnis, Treffzeit) und Anhängen. Im Termin siehst du den Unterricht an dem Tag und kannst ihn als Ausfall markieren, der Plan rückt dann nach.
+
+**Wettkämpfe (erweitert):** Uhrzeiten (Beginn, Ende, Treffzeit); **Kopieren** eines Wettkampfs (Haken werden zurückgesetzt); **Checklisten-Schnellauswahl** aus früheren Wettkämpfen (★) und Standardvorschlägen (z. B. Busbuchung); pro teilnehmendem Kind entsteht automatisch ein Punkt „Einverständnis“. Offene Punkte der nächsten 31 Tage erscheinen auf „Heute“ und auf der Aufgabenseite.
 
 ## 11. Aufgaben und Verpflichtungen
 
@@ -179,6 +190,10 @@ Mehr → Foto importieren (oder „Aus Foto" in einer Klasse):
 - Notizen sind standardmäßig aus, weil sie Persönliches enthalten können.
 - **Importieren:** Datei wählen. Es werden nur neue Einträge hinzugefügt, Vorhandenes bleibt unverändert. Ein zweiter Import derselben Datei erzeugt keine Doppelten.
 - Das ist etwas anderes als das Backup: Das Backup enthält alle Daten und dient nur der eigenen Sicherung.
+
+**Material als PDF:** Unter „Material teilen“ gibt es neben der importierbaren Datei auch „Als PDF“ (zum Lesen und Ausdrucken, ohne Personendaten).
+
+**Weitere Neuerungen:** Fortbildung als Verpflichtung (mehrtägig), Aufsichten mit mehreren Wochentagen auf einmal, Urlaub und Krank in der Arbeitszeit, Heute-Übersicht (3 Tage / 1 Woche / 2 Wochen), Schul-Basiszeit 7:30–14 Uhr nur Mo–Fr. Import-Format für Kinder: `Name; Vorname; Geburtsdatum; Geschlecht`.
 
 ## 15. Fächer
 
