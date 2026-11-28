@@ -25,7 +25,7 @@ export default function BibliothekPage() {
   const [suche, setSuche] = useState('');
   const [ort, setOrt] = useState<Ort | 'alle'>('alle');
   const [fav, setFav] = useState(false);
-  const [tag, setTag] = useState<string | null>(null);
+  const [gewaehlt, setGewaehlt] = useState<string[]>([]);
   const [materialNeu, setMaterialNeu] = useState(false);
   const [toast, zeigeToast] = useToast();
 
@@ -43,7 +43,7 @@ export default function BibliothekPage() {
     return m;
   }, [], new Map<string, string>());
 
-  const gefiltert = filterSpiele(spiele, { suche, ort, nurFavoriten: fav, tag });
+  const gefiltert = filterSpiele(spiele, { suche, ort, nurFavoriten: fav, tags: gewaehlt });
   const tags = alleTags(spiele);
 
   async function neuesSpiel() {
@@ -93,7 +93,7 @@ export default function BibliothekPage() {
                   <button key={o} className={`chip-btn ${ort === o ? 'on' : ''}`} onClick={() => setOrt(ort === o ? 'alle' : o)}>{ORT_LABEL[o]}</button>
                 ))}
                 {tags.map((t) => (
-                  <button key={t} className={`chip-btn ${tag === t ? 'on' : ''}`} onClick={() => setTag(tag === t ? null : t)}>{t}</button>
+                  <button key={t} className={`chip-btn ${gewaehlt.includes(t) ? 'on' : ''}`} onClick={() => setGewaehlt(gewaehlt.includes(t) ? gewaehlt.filter((x) => x !== t) : [...gewaehlt, t])}>{t}</button>
                 ))}
               </div>
               {gefiltert.length === 0 ? <Empty>Kein Spiel gefunden.</Empty> : (

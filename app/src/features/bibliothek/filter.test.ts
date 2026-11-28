@@ -22,7 +22,7 @@ const liste = [
 ];
 
 describe('Spiele filtern', () => {
-  const alle = { suche: '', ort: 'alle' as const, nurFavoriten: false, tag: null };
+  const alle = { suche: '', ort: 'alle' as const, nurFavoriten: false, tags: [] as string[] };
   it('sortiert alphabetisch', () => {
     expect(filterSpiele(liste, alle).map((s) => s.titel)).toEqual(['Ampelspiel', 'Schwarzer Mann', 'Zweifelderball']);
   });
@@ -34,7 +34,8 @@ describe('Spiele filtern', () => {
   it('filtert nach Ort (beides passt immer), Favorit und Schlagwort', () => {
     expect(filterSpiele(liste, { ...alle, ort: 'halle' }).map((s) => s.titel)).toEqual(['Ampelspiel', 'Zweifelderball']);
     expect(filterSpiele(liste, { ...alle, nurFavoriten: true }).map((s) => s.titel)).toEqual(['Schwarzer Mann']);
-    expect(filterSpiele(liste, { ...alle, tag: 'Fangspiel' })).toHaveLength(2);
+    expect(filterSpiele(liste, { ...alle, tags: ['Fangspiel'] })).toHaveLength(2);
+    expect(filterSpiele(liste, { ...alle, tags: ['Fangspiel', 'Aufwärmen'] }).map((s) => s.titel)).toEqual(['Ampelspiel']);
   });
   it('listet Schlagwörter eindeutig', () => {
     expect(alleTags(liste)).toEqual(['Aufwärmen', 'Ballspiel', 'Fangspiel']);
